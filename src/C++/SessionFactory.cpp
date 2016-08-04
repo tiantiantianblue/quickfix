@@ -61,7 +61,7 @@ Session* SessionFactory::create( const SessionID& sessionID,
     }
     defaultApplVerID = Message::toApplVerID( settings.getString(DEFAULT_APPLVERID) );
   }
-
+  
   DataDictionaryProvider dataDictionaryProvider;
   if( useDataDictionary )
   {
@@ -99,7 +99,6 @@ Session* SessionFactory::create( const SessionID& sessionID,
               ( settings.getString( END_TIME ) );
   }
   catch ( FieldConvertError & e ) { throw ConfigError( e.what() ); }
-
   TimeRange utcSessionTime
     ( startTime, endTime, startDay, endDay );
   TimeRange localSessionTime
@@ -112,21 +111,17 @@ Session* SessionFactory::create( const SessionID& sessionID,
     throw ConfigError( "StartDay used without EndDay" );
   if( endDay >= 0 && startDay < 0 )
     throw ConfigError( "EndDay used without StartDay" );
-
   HeartBtInt heartBtInt( 0 );
   if ( connectionType == "initiator" )
   {
     heartBtInt = HeartBtInt( settings.getInt( HEARTBTINT ) );
     if ( heartBtInt <= 0 ) throw ConfigError( "Heartbeat must be greater than zero" );
   }
-
   std::auto_ptr<Session> pSession;
   pSession.reset( new Session( m_application, m_messageStoreFactory,
     sessionID, dataDictionaryProvider, sessionTimeRange,
     heartBtInt, m_pLogFactory ) );
-
   pSession->setSenderDefaultApplVerID(defaultApplVerID);
-
   int logonDay = startDay;
   int logoutDay = endDay;
   try
@@ -267,7 +262,7 @@ void SessionFactory::processFixDataDictionary(const SessionID& sessionID,
                                               const Dictionary& settings, 
                                               DataDictionaryProvider& provider) throw(ConfigError)
 {
-  ptr::shared_ptr<DataDictionary> pDataDictionary = createDataDictionary(sessionID, settings, DATA_DICTIONARY);
+  std::shared_ptr<DataDictionary> pDataDictionary = createDataDictionary(sessionID, settings, DATA_DICTIONARY);
   provider.addTransportDataDictionary(sessionID.getBeginString(), pDataDictionary);
   provider.addApplicationDataDictionary(Message::toApplVerID(sessionID.getBeginString()), pDataDictionary);
 }

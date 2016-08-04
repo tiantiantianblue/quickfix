@@ -29,17 +29,13 @@
 
 namespace FIX
 {
-std::string Dictionary::getString( const std::string& key, bool capitalize ) const
-throw( ConfigError, FieldConvertError )
+std::string Dictionary::getString( const std::string& key) const
+throw( ConfigError)
 {
   Data::const_iterator i = m_data.find( string_toUpper(key) );
-  if ( i == m_data.end() ) throw ConfigError( key + " not defined" );
-
-  std::string result = i->second;
-  if( capitalize )
-     std::transform(result.begin(), result.end(), result.begin(), toupper);
-
-  return result;
+  if ( i == m_data.end() ) 
+	  throw ConfigError( key + " not defined" );
+  return  i->second;
 }
 
 int Dictionary::getInt( const std::string& key ) const
@@ -69,7 +65,7 @@ throw( ConfigError, FieldConvertError )
 }
 
 bool Dictionary::getBool( const std::string& key ) const
-throw( ConfigError, FieldConvertError )
+throw( ConfigError)
 {
   try
   {

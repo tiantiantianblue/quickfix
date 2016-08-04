@@ -73,34 +73,28 @@ class FieldBase
   friend class Message;
 
   /// Constructor which also calculates field metrics
-  FieldBase( int tag, 
+  FieldBase( int field, 
              std::string::const_iterator valueStart, 
              std::string::const_iterator valueEnd,
              std::string::const_iterator tagStart, 
              std::string::const_iterator tagEnd )
-    : m_tag( tag )
+    : m_field( field )
     , m_string( valueStart, valueEnd )
     , m_metrics( calculateMetrics( tagStart, tagEnd ) )
   {}
 
 public:
-  FieldBase( int tag, const std::string& string )
-    : m_tag( tag ), m_string(string), m_metrics( no_metrics() )
+  FieldBase( int field, const std::string& string )
+    : m_field( field ), m_string(string), m_metrics( no_metrics() )
   {}
 
   virtual ~FieldBase() {}
 
-  void setTag( int tag )
-  {
-    m_tag = tag;
-    m_metrics = no_metrics();
-    m_data.clear();
-  }
-
-  /// @deprecated Use setTag
   void setField( int field )
   {
-    setTag( field );
+    m_field = field;
+    m_metrics = no_metrics();
+    m_data.clear();
   }
 
   void setString( const std::string& string )
@@ -111,12 +105,8 @@ public:
   }
 
   /// Get the fields integer tag.
-  int getTag() const
-  { return m_tag; }
-
-  /// @deprecated Use getTag
   int getField() const
-  { return getTag(); }
+  { return m_field; }
 
   /// Get the string representation of the fields value.
   const std::string& getString() const
@@ -147,7 +137,7 @@ public:
 
   /// Compares fields based on their tag numbers
   bool operator < ( const FieldBase& field ) const
-  { return m_tag < field.m_tag; }
+  { return m_field < field.m_field; }
 
 private:
 
@@ -161,13 +151,13 @@ private:
   /// Serializes string representation of the Field to input string
   void encodeTo( std::string& result ) const
   {
-    size_t tagLength = FIX::number_of_symbols_in( m_tag ) + 1;
+    size_t tagLength = FIX::number_of_symbols_in( m_field ) + 1;
     size_t totalLength = tagLength + m_string.length() + 1;
 
     result.resize( totalLength );
 
     char * buf = (char*)result.c_str();
-    FIX::integer_to_string( buf, tagLength, m_tag );
+    FIX::integer_to_string( buf, tagLength, m_field );
 
     buf[tagLength - 1] = '=';
     memcpy( buf + tagLength, m_string.data(), m_string.length() );
@@ -196,7 +186,7 @@ private:
     return calculateMetrics( field.begin(), field.end() );
   }
 
-  int m_tag;
+  int m_field;
   std::string m_string;
   mutable std::string m_data;
   mutable field_metrics m_metrics;
@@ -333,7 +323,7 @@ public:
     { try
       { return CharConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator char() const
     { return getValue(); }
 };
@@ -353,7 +343,7 @@ public:
     { try
       { return DoubleConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator double() const
     { return getValue(); }
 };
@@ -373,7 +363,7 @@ public:
     { try
       { return IntConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator const int() const
     { return getValue(); }
 };
@@ -393,7 +383,7 @@ public:
     { try
       { return BoolConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator bool() const
     { return getValue(); }
 };
@@ -413,7 +403,7 @@ public:
     { try
       { return UtcTimeStampConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator UtcTimeStamp() const
     { return getValue(); }
 
@@ -440,7 +430,7 @@ public:
     { try
       { return UtcDateConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator UtcDate() const
     { return getValue(); }
 
@@ -467,7 +457,7 @@ public:
     { try
       { return UtcTimeOnlyConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator UtcTimeOnly() const
     { return getValue(); }
 
@@ -494,7 +484,7 @@ public:
     { try
       { return CheckSumConvertor::convert( getString() ); }
       catch( FieldConvertError& )
-      { throw IncorrectDataFormat( getTag(), getString() ); } }
+      { throw IncorrectDataFormat( getField(), getString() ); } }
   operator const int() const
     { return getValue(); }
 };

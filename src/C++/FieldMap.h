@@ -80,28 +80,28 @@ public:
   throw( RepeatedTag )
   {
       if(!overwrite)
-          m_fields.insert( Fields::value_type( field.getTag(), field ) );
+          m_fields.insert( Fields::value_type( field.getField(), field ) );
       else
       {
-          Fields::iterator i = m_fields.find( field.getTag() );
+          Fields::iterator i = m_fields.find( field.getField() );
           if( i == m_fields.end() )
-              m_fields.insert( Fields::value_type( field.getTag(), field ) );
+              m_fields.insert( Fields::value_type( field.getField(), field ) );
           else
               i->second = field;
       }
   }
   /// Set a field without a field class
-  void setField( int tag, const std::string& value )
+  void setField( int field, const std::string& value )
   throw( RepeatedTag, NoTagValue )
   {
-    FieldBase fieldBase( tag, value );
+    FieldBase fieldBase( field, value );
     setField( fieldBase );
   }
 
   /// Get a field if set
   bool getFieldIfSet( FieldBase& field ) const
   {
-    Fields::const_iterator iter = m_fields.find( field.getTag() );
+    Fields::const_iterator iter = m_fields.find( field.getField() );
     if ( iter == m_fields.end() )
       return false;
     field = iter->second;
@@ -112,89 +112,89 @@ public:
   FieldBase& getField( FieldBase& field )
   const throw( FieldNotFound )
   {
-    field = getFieldRef( field.getTag() );
+    field = getFieldRef( field.getField() );
     return field;
   }
 
   /// Get a field without a field class
-  const std::string& getField( int tag )
+  const std::string& getField( int field )
   const throw( FieldNotFound )
   {
-    return getFieldRef( tag ).getString();
+    return getFieldRef( field ).getString();
   }
 
   /// Get direct access to a field through a reference
-  const FieldBase& getFieldRef( int tag )
+  const FieldBase& getFieldRef( int field )
   const throw( FieldNotFound )
   {
-    Fields::const_iterator iter = m_fields.find( tag );
+    Fields::const_iterator iter = m_fields.find( field );
     if ( iter == m_fields.end() )
-      throw FieldNotFound( tag );
+      throw FieldNotFound( field );
     return iter->second;
   }
 
   /// Get direct access to a field through a pointer
-  const FieldBase* const getFieldPtr( int tag )
+  const FieldBase* const getFieldPtr( int field )
   const throw( FieldNotFound )
   {
-    return &getFieldRef( tag );
+    return &getFieldRef( field );
   }
 
   /// Check to see if a field is set
   bool isSetField( const FieldBase& field ) const
-  { return isSetField( field.getTag() ); }
+  { return isSetField( field.getField() ); }
   /// Check to see if a field is set by referencing its number
-  bool isSetField( int tag ) const
-  { return m_fields.find( tag ) != m_fields.end(); }
+  bool isSetField( int field ) const
+  { return m_fields.find( field ) != m_fields.end(); }
 
   /// Remove a field. If field is not present, this is a no-op.
-  void removeField( int tag );
+  void removeField( int field );
 
   /// Add a group.
-  void addGroup( int tag, const FieldMap& group, bool setCount = true );
+  void addGroup( int field, const FieldMap& group, bool setCount = true );
 
   /// Acquire ownership of Group object
-  void addGroupPtr( int tag, FieldMap * group, bool setCount = true );
+  void addGroupPtr( int field, FieldMap * group, bool setCount = true );
 
   /// Replace a specific instance of a group.
-  void replaceGroup( int num, int tag, const FieldMap& group );
+  void replaceGroup( int num, int field, const FieldMap& group );
 
   /// Get a specific instance of a group.
-  FieldMap& getGroup( int num, int tag, FieldMap& group ) const
+  FieldMap& getGroup( int num, int field, FieldMap& group ) const
   throw( FieldNotFound )
   {
-    return group = getGroupRef( num, tag );
+    return group = getGroupRef( num, field );
   }
 
   /// Get direct access to a field through a reference
-  FieldMap& getGroupRef( int num, int tag ) const
+  FieldMap& getGroupRef( int num, int field ) const
   throw( FieldNotFound )
   {
-    Groups::const_iterator i = m_groups.find( tag );
-    if( i == m_groups.end() ) throw FieldNotFound( tag );
-    if( num <= 0 ) throw FieldNotFound( tag );
-    if( i->second.size() < (unsigned)num ) throw FieldNotFound( tag );
+    Groups::const_iterator i = m_groups.find( field );
+    if( i == m_groups.end() ) throw FieldNotFound( field );
+    if( num <= 0 ) throw FieldNotFound( field );
+    if( i->second.size() < (unsigned)num ) throw FieldNotFound( field );
     return *( *(i->second.begin() + (num-1) ) );
   }
 
   /// Get direct access to a field through a pointer
-  FieldMap* getGroupPtr( int num, int tag ) const
+  FieldMap* getGroupPtr( int num, int field ) const
   throw( FieldNotFound )
   {
-    return &getGroupRef( num, tag );
+    return &getGroupRef( num, field );
   }
 
   /// Remove a specific instance of a group.
-  void removeGroup( int num, int tag );
+  void removeGroup( int num, int field );
   /// Remove all instances of a group.
-  void removeGroup( int tag );
+  void removeGroup( int field );
 
   /// Check to see any instance of a group exists
-  bool hasGroup( int tag ) const;
+  bool hasGroup( int field ) const;
   /// Check to see if a specific instance of a group exists
-  bool hasGroup( int num, int tag ) const;
+  bool hasGroup( int num, int field ) const;
   /// Count the number of instance of a group
-  size_t groupCount( int tag ) const;
+  size_t groupCount( int field ) const;
 
   /// Clear all fields from the map
   void clear();

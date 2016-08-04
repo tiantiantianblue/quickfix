@@ -22,10 +22,9 @@
 #ifndef FIX_PUGIXMLDOMDOCUMENT_H
 #define FIX_PUGIXMLDOMDOCUMENT_H
 
-#include "DOMDocument.h"
 #include "Exceptions.h"
 #include "pugixml.hpp"
-
+#include "DOMDocument.h"
 namespace FIX
 {
   /// XML attribute as represented by pugixml.
@@ -61,12 +60,9 @@ namespace FIX
   };
 
   /// XML document as represented by pugixml.
-  class PUGIXML_DOMDocument : public DOMDocument
+  class PUGIXML_DOMDocument
   {
   public:
-    PUGIXML_DOMDocument() throw( ConfigError );
-    ~PUGIXML_DOMDocument();
-
     bool load( std::istream& );
     bool load( const std::string& );
     bool xml( std::ostream& );
@@ -76,6 +72,7 @@ namespace FIX
   private:
     pugi::xml_document m_pDoc;
   };
+  using DOMDocumentPtr = std::shared_ptr<PUGIXML_DOMDocument>;
 }
 
 #endif

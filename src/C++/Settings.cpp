@@ -29,17 +29,11 @@ namespace FIX
 {
 bool isComment( const std::string& line )
 {
-  if( line.size() == 0 )
-    return false;
-
   return line[0] == '#';
 }
 
 bool isSection( const std::string& line )
 {
-  if( line.size() == 0 )
-    return false;
-
   return line[0] == '[' && line[line.size()-1] == ']';
 }
 
@@ -58,32 +52,27 @@ std::pair<std::string, std::string> splitKeyValue( const std::string& line )
   size_t equals = line.find( '=' );
   std::string key = std::string( line, 0, equals );
   std::string value = std::string( line, equals + 1, std::string::npos );
-  return std::pair<std::string, std::string>( key, value );
+  return std::pair<std::string, std::string>( std::move(key), std::move(value));
 }
 
 std::istream& operator>>( std::istream& stream, Settings& s )
 {
-  char buffer[1024];
+  std::string buffer;
   std::string line;
-  Settings::Sections::iterator section = s.m_sections.end();;
 
-  while( stream.getline(buffer, 1024) )
+  while (getline(stream, buffer))
   {
     line = string_strip( buffer );
-    if( isComment(line) )
-    {
+    if(line.empty()||isComment(line) )
       continue;
-    }
-    else if( isSection(line) )
+    if( isSection(line) )
     {
-      section = s.m_sections.insert( s.m_sections.end(), Dictionary(splitSection(line)) );
+      s.m_sections.emplace_back(splitSection(line));
     }
-    else if( isKeyValue(line) )
+    else if(!s.m_sections.empty()&&isKeyValue(line) )
     {
-      std::pair<std::string, std::string> keyValue = splitKeyValue( line );
-      if( section == s.m_sections.end() )
-        continue;
-      (*section).setString( keyValue.first, keyValue.second );
+		std::pair<std::string, std::string> keyValue = splitKeyValue(line);
+		s.m_sections.back().setString(keyValue.first, keyValue.second);
     }
   }
   return stream;

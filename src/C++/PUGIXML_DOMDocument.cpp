@@ -69,16 +69,6 @@ namespace FIX
   {
     return m_pNode.value();
   }
-
-  PUGIXML_DOMDocument::PUGIXML_DOMDocument() throw( ConfigError )
-  {
-  }
-
-  PUGIXML_DOMDocument::~PUGIXML_DOMDocument()
-  {
-    //xmlFreeDoc(m_pDoc);
-  }
-
   bool PUGIXML_DOMDocument::load( std::istream& stream )
   {
     try

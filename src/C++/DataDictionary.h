@@ -28,12 +28,11 @@
 
 #include "Fields.h"
 #include "FieldMap.h"
-#include "DOMDocument.h"
 #include "Exceptions.h"
 #include <set>
 #include <map>
 #include <string.h>
-
+#include "PUGIXML_DOMDocument.h"
 namespace FIX
 {
 class FieldMap;
@@ -330,7 +329,7 @@ private:
   /// If we need to check for the tag in the dictionary
   bool shouldCheckTag( const FieldBase& field ) const
   {
-    if( !m_checkUserDefinedFields && field.getTag() >= FIELD::UserMin )
+    if( !m_checkUserDefinedFields && field.getField() >= FIELD::UserMin )
       return false;
     else
       return true;
@@ -340,8 +339,8 @@ private:
   void checkValidTagNumber( const FieldBase& field ) const
   throw( InvalidTagNumber )
   {
-    if( m_fields.find( field.getTag() ) == m_fields.end() )
-      throw InvalidTagNumber( field.getTag() );
+    if( m_fields.find( field.getField() ) == m_fields.end() )
+      throw InvalidTagNumber( field.getField() );
   }
 
   void checkValidFormat( const FieldBase& field ) const
@@ -350,7 +349,7 @@ private:
     try
     {
       TYPE::Type type = TYPE::Unknown;
-      getFieldType( field.getTag(), type );
+      getFieldType( field.getField(), type );
       switch ( type )
       {
       case TYPE::String:
@@ -417,17 +416,17 @@ private:
       }
     }
     catch ( FieldConvertError& )
-    { throw IncorrectDataFormat( field.getTag(), field.getString() ); }
+    { throw IncorrectDataFormat( field.getField(), field.getString() ); }
   }
 
   void checkValue( const FieldBase& field ) const
   throw( IncorrectTagValue )
   {
-    if ( !hasFieldValue( field.getTag() ) ) return ;
+    if ( !hasFieldValue( field.getField() ) ) return ;
 
     const std::string& value = field.getString();
-    if ( !isFieldValue( field.getTag(), value ) )
-      throw IncorrectTagValue( field.getTag() );
+    if ( !isFieldValue( field.getField(), value ) )
+      throw IncorrectTagValue( field.getField() );
   }
 
   /// Check if a field has a value.
@@ -435,7 +434,7 @@ private:
   throw( NoTagValue )
   {
     if ( m_checkFieldsHaveValues && !field.getString().length() )
-      throw NoTagValue( field.getTag() );
+      throw NoTagValue( field.getField() );
   }
 
   /// Check if a field is in this message type.
@@ -443,8 +442,8 @@ private:
   ( const FieldBase& field, const MsgType& msgType ) const
   throw( TagNotDefinedForMessage )
   {
-    if ( !isMsgField( msgType, field.getTag() ) )
-      throw TagNotDefinedForMessage( field.getTag() );
+    if ( !isMsgField( msgType, field.getField() ) )
+      throw TagNotDefinedForMessage( field.getField() );
   }
 
   /// Check if group count matches number of groups in
@@ -452,7 +451,7 @@ private:
   ( const FieldBase& field, const FieldMap& fieldMap, const MsgType& msgType ) const
   throw( RepeatingGroupCountMismatch )
   {
-    int fieldNum = field.getTag();
+    int fieldNum = field.getField();
     if( isGroup(msgType, fieldNum) )
     {
       if( (int)fieldMap.groupCount(fieldNum)
@@ -507,16 +506,16 @@ private:
     }
   }
 
-  int lookupXMLFieldNumber( DOMDocument*, DOMNode* ) const;
-  int lookupXMLFieldNumber( DOMDocument*, const std::string& name ) const;
-  int addXMLComponentFields( DOMDocument*, DOMNode*, const std::string& msgtype, DataDictionary&, bool );
-  void addXMLGroup( DOMDocument*, DOMNode*, const std::string& msgtype, DataDictionary&, bool );
+  int lookupXMLFieldNumber( PUGIXML_DOMDocument*, DOMNode* ) const;
+  int lookupXMLFieldNumber( PUGIXML_DOMDocument*, const std::string& name ) const;
+  int addXMLComponentFields( PUGIXML_DOMDocument*, DOMNode*, const std::string& msgtype, DataDictionary&, bool );
+  void addXMLGroup( PUGIXML_DOMDocument*, DOMNode*, const std::string& msgtype, DataDictionary&, bool );
   TYPE::Type XMLTypeToType( const std::string& xmlType ) const;
 
-  bool m_hasVersion;
-  bool m_checkFieldsOutOfOrder;
-  bool m_checkFieldsHaveValues;
-  bool m_checkUserDefinedFields;
+  bool m_hasVersion{false};
+  bool m_checkFieldsOutOfOrder{true};
+  bool m_checkFieldsHaveValues{true};
+  bool m_checkUserDefinedFields{true};
   BeginString m_beginString;
   MsgTypeToField m_messageFields;
   MsgTypeToField m_requiredFields;

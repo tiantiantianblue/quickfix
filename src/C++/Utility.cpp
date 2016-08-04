@@ -66,9 +66,6 @@ std::string string_toLower( const std::string& value )
 
 std::string string_strip( const std::string& value )
 {
-  if( !value.size() )
-    return value;
-
   size_t startPos = value.find_first_not_of(" \t\r\n");
   size_t endPos = value.find_last_not_of(" \t\r\n");
 
@@ -396,7 +393,7 @@ bool thread_spawn( THREAD_START_ROUTINE func, void* var, thread_id& thread )
 #ifdef _MSC_VER
   thread_id result = 0;
   unsigned int id = 0;
-  result = _beginthreadex( NULL, 0, &func, var, 0, &id );
+  result = _beginthreadex( NULL, 0, func, var, 0, &id );
   if ( result == 0 ) return false;
 #else
   thread_id result = 0;

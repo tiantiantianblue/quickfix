@@ -114,20 +114,7 @@ FileLog::FileLog( const std::string& path, const std::string& backupPath, const 
 
 std::string FileLog::generatePrefix( const SessionID& s )
 {
-  const std::string& begin =
-    s.getBeginString().getString();
-  const std::string& sender =
-    s.getSenderCompID().getString();
-  const std::string& target =
-    s.getTargetCompID().getString();
-  const std::string& qualifier =
-    s.getSessionQualifier();
-
-  std::string prefix = begin + "-" + sender + "-" + target;
-  if( qualifier.size() )
-    prefix += "-" + qualifier;
-
-  return prefix;
+  return s.getName();
 }
 
 void FileLog::init( std::string path, std::string backupPath, const std::string& prefix )

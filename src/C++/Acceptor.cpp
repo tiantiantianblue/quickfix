@@ -71,9 +71,6 @@ void Acceptor::initialize() throw ( ConfigError )
   std::set < SessionID > sessions = m_settings.getSessions();
   std::set < SessionID > ::iterator i;
 
-  if ( !sessions.size() )
-    throw ConfigError( "No sessions defined" );
-
   SessionFactory factory( m_application, m_messageStoreFactory,
                           m_pLogFactory );
 
@@ -86,7 +83,7 @@ void Acceptor::initialize() throw ( ConfigError )
     }
   }
 
-  if ( !m_sessions.size() )
+  if ( m_sessions.empty() )
     throw ConfigError( "No sessions defined for acceptor" );
 }
 
@@ -158,35 +155,12 @@ const Dictionary* const Acceptor::getSessionSettings( const SessionID& sessionID
 void Acceptor::start() throw ( ConfigError, RuntimeError )
 {
   m_stop = false;
-  onConfigure( m_settings );
   onInitialize( m_settings );
 
   HttpServer::startGlobal( m_settings );
 
   if( !thread_spawn( &startThread, this, m_threadid ) )
     throw RuntimeError("Unable to spawn thread");
-}
-
-void Acceptor::block() throw ( ConfigError, RuntimeError )
-{
-  m_stop = false;
-  onConfigure( m_settings );
-  onInitialize( m_settings );
-
-  startThread(this);
-}
-
-bool Acceptor::poll( double timeout ) throw ( ConfigError, RuntimeError )
-{
-  if( m_firstPoll )
-  {
-    m_stop = false;
-    onConfigure( m_settings );
-    onInitialize( m_settings );
-    m_firstPoll = false;
-  }
-
-  return onPoll( timeout );
 }
 
 void Acceptor::stop( bool force )

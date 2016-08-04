@@ -74,7 +74,6 @@ private:
   typedef std::map < int, int > SocketToPort;
   typedef std::map < int, thread_id > SocketToThread;
 
-  void onConfigure( const SessionSettings& ) throw ( ConfigError );
   void onInitialize( const SessionSettings& ) throw ( RuntimeError );
 
   void onStart();

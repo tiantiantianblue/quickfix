@@ -64,10 +64,6 @@ public:
 
   /// Start acceptor.
   void start() throw ( ConfigError, RuntimeError );
-  /// Block on the acceptor
-  void block() throw ( ConfigError, RuntimeError );
-  /// Poll the acceptor
-  bool poll( double timeout = 0.0 ) throw ( ConfigError, RuntimeError );
 
   /// Stop acceptor.
   void stop( bool force = false );
@@ -92,15 +88,10 @@ public:
 
 private:
   void initialize() throw ( ConfigError );
-
-  /// Implemented to configure acceptor
-  virtual void onConfigure( const SessionSettings& ) throw ( ConfigError ) {};
   /// Implemented to initialize acceptor
   virtual void onInitialize( const SessionSettings& ) throw ( RuntimeError ) {};
   /// Implemented to start listening for connections.
   virtual void onStart() = 0;
-  /// Implemented to connect and poll for events.
-  virtual bool onPoll( double second ) = 0;
   /// Implemented to stop a running acceptor.
   virtual void onStop() = 0;
 

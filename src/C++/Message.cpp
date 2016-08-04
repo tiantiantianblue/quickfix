@@ -85,9 +85,9 @@ void Message::reverseRoute( const Header& header )
   SenderCompID senderCompID;
   TargetCompID targetCompID;
 
-  m_header.removeField( beginString.getTag() );
-  m_header.removeField( senderCompID.getTag() );
-  m_header.removeField( targetCompID.getTag() );
+  m_header.removeField( beginString.getField() );
+  m_header.removeField( senderCompID.getField() );
+  m_header.removeField( targetCompID.getField() );
 
   if( header.getFieldIfSet( beginString ) )
   {
@@ -97,8 +97,8 @@ void Message::reverseRoute( const Header& header )
     OnBehalfOfLocationID onBehalfOfLocationID;
     DeliverToLocationID deliverToLocationID;
 
-    m_header.removeField( onBehalfOfLocationID.getTag() );
-    m_header.removeField( deliverToLocationID.getTag() );
+    m_header.removeField( onBehalfOfLocationID.getField() );
+    m_header.removeField( deliverToLocationID.getField() );
 
     if( beginString >= BeginString_FIX41 )
     {
@@ -134,10 +134,10 @@ void Message::reverseRoute( const Header& header )
   DeliverToCompID deliverToCompID;
   DeliverToSubID deliverToSubID;
 
-  m_header.removeField( onBehalfOfCompID.getTag() );
-  m_header.removeField( onBehalfOfSubID.getTag() );
-  m_header.removeField( deliverToCompID.getTag() );
-  m_header.removeField( deliverToSubID.getTag() );
+  m_header.removeField( onBehalfOfCompID.getField() );
+  m_header.removeField( onBehalfOfSubID.getField() );
+  m_header.removeField( deliverToCompID.getField() );
+  m_header.removeField( deliverToSubID.getField() );
 
   if( header.getFieldIfSet( onBehalfOfCompID ) )
   {
@@ -286,18 +286,18 @@ throw( InvalidMessage )
   while ( pos < string.size() )
   {
     FieldBase field = extractField( string, pos, pSessionDataDictionary, pApplicationDataDictionary );
-    if ( count < 3 && headerOrder[ count++ ] != field.getTag() )
+    if ( count < 3 && headerOrder[ count++ ] != field.getField() )
       if ( doValidation ) throw InvalidMessage("Header fields out of order");
 
     if ( isHeaderField( field, pSessionDataDictionary ) )
     {
       if ( type != header )
       {
-        if(m_tag == 0) m_tag = field.getTag();
+        if(m_field == 0) m_field = field.getField();
         m_validStructure = false;
       }
 
-      if ( field.getTag() == FIELD::MsgType )
+      if ( field.getField() == FIELD::MsgType )
         msg = field.getString();
 
       m_header.setField( field, false );
@@ -317,7 +317,7 @@ throw( InvalidMessage )
     {
       if ( type == trailer )
       {
-        if(m_tag == 0) m_tag = field.getTag();
+        if(m_field == 0) m_field = field.getField();
         m_validStructure = false;
       }
 
@@ -338,7 +338,7 @@ void Message::setGroup( const std::string& msg, const FieldBase& field,
                         std::string::size_type& pos, FieldMap& map,
                         const DataDictionary& dataDictionary )
 {
-  int group = field.getTag();
+  int group = field.getField();
   int delim;
   const DataDictionary* pDD = 0;
   if ( !dataDictionary.getGroup( msg, group, delim, pDD ) ) return ;
@@ -351,17 +351,17 @@ void Message::setGroup( const std::string& msg, const FieldBase& field,
        
     // Start a new group because...
     if (// found delimiter
-    (field.getTag() == delim) ||
+    (field.getField() == delim) ||
     // no delimiter, but field belongs to group OR field already processed
-    (pDD->isField( field.getTag() ) && (pGroup.get() == 0 || pGroup->isSetField( field.getTag() )) ))
+    (pDD->isField( field.getField() ) && (pGroup.get() == 0 || pGroup->isSetField( field.getField() )) ))
     {
       if ( pGroup.get() )
       {
         map.addGroupPtr( group, pGroup.release(), false );
       }
-      pGroup.reset( new Group( field.getTag(), delim, pDD->getOrderedFields() ) );
+      pGroup.reset( new Group( field.getField(), delim, pDD->getOrderedFields() ) );
     }
-    else if ( !pDD->isField( field.getTag() ) )
+    else if ( !pDD->isField( field.getField() ) )
     {
       if ( pGroup.get() )
       {
@@ -387,7 +387,7 @@ bool Message::setStringHeader( const std::string& string )
   while ( pos < string.size() )
   {
     FieldBase field = extractField( string, pos );
-    if ( count < 3 && headerOrder[ count++ ] != field.getTag() )
+    if ( count < 3 && headerOrder[ count++ ] != field.getField() )
       return false;
 
     if ( isHeaderField( field ) )
@@ -439,8 +439,8 @@ bool Message::isHeaderField( int field )
 bool Message::isHeaderField( const FieldBase& field,
                              const DataDictionary* pD )
 {
-  if ( isHeaderField( field.getTag() ) ) return true;
-  if ( pD ) return pD->isHeaderField( field.getTag() );
+  if ( isHeaderField( field.getField() ) ) return true;
+  if ( pD ) return pD->isHeaderField( field.getField() );
   return false;
 }
 
@@ -460,8 +460,8 @@ bool Message::isTrailerField( int field )
 bool Message::isTrailerField( const FieldBase& field,
                               const DataDictionary* pD )
 {
-  if ( isTrailerField( field.getTag() ) ) return true;
-  if ( pD ) return pD->isTrailerField( field.getTag() );
+  if ( isTrailerField( field.getField() ) ) return true;
+  if ( pD ) return pD->isTrailerField( field.getField() );
   return false;
 }
 
@@ -560,22 +560,10 @@ FIX::FieldBase Message::extractField( const std::string& string, std::string::si
       const std::string& fieldLength = pGroup->getField( lenField );
       soh = valueStart + atol( fieldLength.c_str() );
     }
-    else
+    else if ( isSetField( lenField ) )
     {
-      FIX::FieldMap *lenMap;
-      if ( isHeaderField( lenField ) )
-      {
-          lenMap = &m_header;
-      }
-      else
-      {
-          lenMap = this;
-      }
-      if ( lenMap->isSetField( lenField ) )
-      {
-        const std::string& fieldLength = lenMap->getField( lenField );
-        soh = valueStart + atol( fieldLength.c_str() );
-      }
+      const std::string& fieldLength = getField( lenField );
+      soh = valueStart + atol( fieldLength.c_str() );
     }
   }
 

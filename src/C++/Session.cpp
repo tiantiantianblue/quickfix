@@ -71,11 +71,11 @@ Session::Session( Application& application,
   m_state.store( m_messageStoreFactory.create( m_sessionID ) );
   if ( m_pLogFactory )
     m_state.log( m_pLogFactory->create( m_sessionID ) );
-
-  if( !checkSessionTime(UtcTimeStamp()) )
-    reset();
-
+  //get abort();
+  //if( !checkSessionTime(UtcTimeStamp()) )
+  //reset();
   addSession( *this );
+  //not here abort();
   m_application.onCreate( m_sessionID );
   m_state.onEvent( "Created session" );
 }
@@ -1076,7 +1076,7 @@ bool Session::doPossDup( const Message& msg )
   {
     if ( !header.getFieldIfSet( origSendingTime ) )
     {
-      generateReject( msg, SessionRejectReason_REQUIRED_TAG_MISSING, origSendingTime.getTag() );
+      generateReject( msg, SessionRejectReason_REQUIRED_TAG_MISSING, origSendingTime.getField() );
       return false;
     }
 

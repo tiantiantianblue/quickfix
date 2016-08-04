@@ -50,8 +50,8 @@ public:
   size_t size() const { return m_data.size(); }
 
   /// Get a value as a string.
-  std::string getString( const std::string&, bool capitalize = false ) const
-  throw( ConfigError, FieldConvertError );
+  std::string getString( const std::string&) const
+	  throw(ConfigError);
   /// Get a value as a int.
   int getInt( const std::string& ) const
   throw( ConfigError, FieldConvertError );
@@ -60,7 +60,7 @@ public:
   throw( ConfigError, FieldConvertError );
   /// Get a value as a bool
   bool getBool( const std::string& ) const
-  throw( ConfigError, FieldConvertError );
+  throw( ConfigError );
   /// Get a value as a day of week
   int getDay( const std::string& ) const
   throw( ConfigError, FieldConvertError );

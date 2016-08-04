@@ -39,23 +39,17 @@
 namespace FIX
 {
 DataDictionary::DataDictionary()
-: m_hasVersion( false ), m_checkFieldsOutOfOrder( true ),
-  m_checkFieldsHaveValues( true ), m_checkUserDefinedFields( true )
 {}
 
 DataDictionary::DataDictionary( std::istream& stream )
 throw( ConfigError )
-: m_hasVersion( false ), m_checkFieldsOutOfOrder( true ),
-  m_checkFieldsHaveValues( true ), m_checkUserDefinedFields( true )
 {
   readFromStream( stream );
 }
 
 DataDictionary::DataDictionary( const std::string& url )
 throw( ConfigError )
-: m_hasVersion( false ), m_checkFieldsOutOfOrder( true ),
-  m_checkFieldsHaveValues( true ), m_checkUserDefinedFields( true ),
-  m_orderedFieldsArray(0)
+: m_orderedFieldsArray(0)
 {
   readFromURL( url );
 }
@@ -164,7 +158,7 @@ void DataDictionary::iterate( const FieldMap& map, const MsgType& msgType ) cons
   for ( i = map.begin(); i != map.end(); ++i )
   {
     const FieldBase& field = i->second;
-    if( i != map.begin() && (field.getTag() == lastField) )
+    if( i != map.begin() && (field.getField() == lastField) )
       throw RepeatedTag( lastField );
     checkHasValue( field );
 
@@ -184,7 +178,7 @@ void DataDictionary::iterate( const FieldMap& map, const MsgType& msgType ) cons
         checkGroupCount( field, map, msgType );
       }
     }
-    lastField = field.getTag();
+    lastField = field.getField();
   }
 }
 
@@ -441,7 +435,7 @@ message_order const& DataDictionary::getOrderedFields() const
   return m_orderedFieldsArray;
 }
 
-int DataDictionary::lookupXMLFieldNumber( DOMDocument* pDoc, DOMNode* pNode ) const
+int DataDictionary::lookupXMLFieldNumber( PUGIXML_DOMDocument* pDoc, DOMNode* pNode ) const
 {
   DOMAttributesPtr attrs = pNode->getAttributes();
   std::string name;
@@ -451,7 +445,7 @@ int DataDictionary::lookupXMLFieldNumber( DOMDocument* pDoc, DOMNode* pNode ) co
 }
 
 int DataDictionary::lookupXMLFieldNumber
-( DOMDocument* pDoc, const std::string& name ) const
+( PUGIXML_DOMDocument* pDoc, const std::string& name ) const
 {
   NameToField::const_iterator i = m_names.find(name);
   if( i == m_names.end() )
@@ -459,7 +453,7 @@ int DataDictionary::lookupXMLFieldNumber
   return i->second;
 }
 
-int DataDictionary::addXMLComponentFields( DOMDocument* pDoc, DOMNode* pNode,
+int DataDictionary::addXMLComponentFields( PUGIXML_DOMDocument* pDoc, DOMNode* pNode,
                                             const std::string& msgtype,
                                             DataDictionary& DD,
                                             bool componentRequired )
@@ -523,7 +517,7 @@ int DataDictionary::addXMLComponentFields( DOMDocument* pDoc, DOMNode* pNode,
   return firstField;
 }
 
-void DataDictionary::addXMLGroup( DOMDocument* pDoc, DOMNode* pNode,
+void DataDictionary::addXMLGroup( PUGIXML_DOMDocument* pDoc, DOMNode* pNode,
                                   const std::string& msgtype,
                                   DataDictionary& DD, bool groupRequired  )
 {

@@ -51,22 +51,6 @@ ThreadedSocketAcceptor::~ThreadedSocketAcceptor()
   socket_term(); 
 }
 
-void ThreadedSocketAcceptor::onConfigure( const SessionSettings& s )
-throw ( ConfigError )
-{
-  std::set<SessionID> sessions = s.getSessions();
-  std::set<SessionID>::iterator i;
-  for( i = sessions.begin(); i != sessions.end(); ++i )
-  {
-    const Dictionary& settings = s.get( *i );
-    settings.getInt( SOCKET_ACCEPT_PORT );
-    if( settings.has(SOCKET_REUSE_ADDRESS) )
-      settings.getBool( SOCKET_REUSE_ADDRESS );
-    if( settings.has(SOCKET_NODELAY) )
-      settings.getBool( SOCKET_NODELAY );
-  }
-}
-
 void ThreadedSocketAcceptor::onInitialize( const SessionSettings& s )
 throw ( RuntimeError )
 {
@@ -130,11 +114,6 @@ void ThreadedSocketAcceptor::onStart()
     thread_spawn( &socketAcceptorThread, info, thread );
     addThread( *i, thread );
   }
-}
-
-bool ThreadedSocketAcceptor::onPoll( double timeout )
-{
-  return false;
 }
 
 void ThreadedSocketAcceptor::onStop()

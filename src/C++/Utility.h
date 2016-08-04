@@ -67,7 +67,7 @@
 #include <direct.h>
 #include <time.h>
 typedef int socklen_t;
-typedef int ssize_t;
+typedef int  ssize_t;
 /////////////////////////////////////////////
 #else
 /////////////////////////////////////////////
@@ -151,7 +151,8 @@ tm time_gmtime( const time_t* t );
 tm time_localtime( const time_t* t );
 
 #ifdef _MSC_VER
-typedef unsigned int (_stdcall THREAD_START_ROUTINE)(void *);
+//typedef unsigned  (_stdcall THREAD_START_ROUTINE)(void *);
+typedef unsigned(__stdcall* THREAD_START_ROUTINE)(void*);
 #define  THREAD_PROC unsigned int _stdcall
 #else
 extern "C" { typedef void * (THREAD_START_ROUTINE)(void *); }

@@ -35,23 +35,10 @@ FileStore::FileStore( std::string path, const SessionID& s )
 : m_msgFile( 0 ), m_headerFile( 0 ), m_seqNumsFile( 0 ), m_sessionFile( 0 )
 {
   file_mkdir( path.c_str() );
-
-  if ( path.empty() ) path = ".";
-  const std::string& begin =
-    s.getBeginString().getString();
-  const std::string& sender =
-    s.getSenderCompID().getString();
-  const std::string& target =
-    s.getTargetCompID().getString();
-  const std::string& qualifier =
-    s.getSessionQualifier();
-
-  std::string sessionid = begin + "-" + sender + "-" + target;
-  if( qualifier.size() )
-    sessionid += "-" + qualifier;
-
+  if ( path.empty() ) 
+	  path = ".";
   std::string prefix
-    = file_appendpath(path, sessionid + ".");
+    = file_appendpath(path, s.getName() + ".");
 
   m_msgFileName = prefix + "body";
   m_headerFileName = prefix + "header";
@@ -62,7 +49,7 @@ FileStore::FileStore( std::string path, const SessionID& s )
   {
     open( false );
   }
-  catch ( IOException & e )
+  catch ( const IOException & e )
   {
     throw ConfigError( e.what() );
   }
