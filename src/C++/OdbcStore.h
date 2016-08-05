@@ -68,7 +68,7 @@ private:
   MessageStore* create( const SessionID& s, const Dictionary& );
 
   Dictionary m_dictionary;
-  SessionSettings m_settings;
+  
   std::string m_user;
   std::string m_password;
   std::string m_connectionString;

@@ -32,15 +32,15 @@ Mutex ScreenLog::s_mutex;
 Log* ScreenLogFactory::create()
 {
   bool incoming, outgoing, event;
-  init( m_settings.get(), incoming, outgoing, event );
+  init( SessionSettings::instance().get(), incoming, outgoing, event );
   return new ScreenLog( incoming, outgoing, event );
 }
 
 Log* ScreenLogFactory::create( const SessionID& sessionID )
 {
   Dictionary settings;
-  if( m_settings.has(sessionID) ) 
-    settings = m_settings.get( sessionID );
+  if(SessionSettings::instance().has(sessionID) )
+    settings = SessionSettings::instance().get( sessionID );
 
   bool incoming, outgoing, event;
   init( settings, incoming, outgoing, event );

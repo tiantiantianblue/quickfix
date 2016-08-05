@@ -105,7 +105,7 @@ private:
 
   void initLog( const Dictionary& settings, OdbcLog& log );
 
-  SessionSettings m_settings;
+  
   std::string m_user;
   std::string m_password;
   std::string m_connectionString;

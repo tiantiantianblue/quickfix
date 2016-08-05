@@ -34,12 +34,10 @@
 namespace FIX
 {
 Initiator::Initiator( Application& application,
-                      MessageStoreFactory& messageStoreFactory,
-                      const SessionSettings& settings ) throw( ConfigError )
+                      MessageStoreFactory& messageStoreFactory ) throw( ConfigError )
 : m_threadid( 0 ),
   m_application( application ),
   m_messageStoreFactory( messageStoreFactory ),
-  m_settings( settings ),
   m_pLogFactory( 0 ),
   m_pLog( 0 ),
   m_firstPoll( true ),
@@ -48,12 +46,10 @@ Initiator::Initiator( Application& application,
 
 Initiator::Initiator( Application& application,
                       MessageStoreFactory& messageStoreFactory,
-                      const SessionSettings& settings,
                       LogFactory& logFactory ) throw( ConfigError )
 : m_threadid( 0 ),
   m_application( application ),
   m_messageStoreFactory( messageStoreFactory ),
-  m_settings( settings ),
   m_pLogFactory( &logFactory ),
   m_pLog( logFactory.create() ),
   m_firstPoll( true ),
@@ -62,7 +58,7 @@ Initiator::Initiator( Application& application,
 
 void Initiator::initialize() throw ( ConfigError )
 {
-  std::set < SessionID > sessions = m_settings.getSessions();
+  std::set < SessionID > sessions = SessionSettings::instance().getSessions();
   std::set < SessionID > ::iterator i;
 
   if ( !sessions.size() )
@@ -73,10 +69,10 @@ void Initiator::initialize() throw ( ConfigError )
 
   for ( i = sessions.begin(); i != sessions.end(); ++i )
   {
-    if ( m_settings.get( *i ).getString( "ConnectionType" ) == "initiator" )
+    if (SessionSettings::instance().get( *i ).getString( "ConnectionType" ) == "initiator" )
     {
       m_sessionIDs.insert( *i );
-      m_sessions[ *i ] = factory.create( *i, m_settings.get( *i ) );
+      m_sessions[ *i ] = factory.create( *i, SessionSettings::instance().get( *i ) );
       setDisconnected( *i );
     }
   }
@@ -120,7 +116,7 @@ const Dictionary* const Initiator::getSessionSettings( const SessionID& sessionI
 {
   try
   {
-    return &m_settings.get( sessionID );
+    return &SessionSettings::instance().get( sessionID );
   }
   catch( ConfigError& )
   {
@@ -138,7 +134,7 @@ void Initiator::connect()
   {
     Session* pSession = Session::lookupSession( *i );
     if ( pSession->isEnabled() && pSession->isSessionTime(UtcTimeStamp()) )
-      doConnect( *i, m_settings.get( *i ));
+      doConnect( *i, SessionSettings::instance().get( *i ));
   }
 }
 
@@ -190,10 +186,10 @@ bool Initiator::isDisconnected( const SessionID& sessionID )
 void Initiator::start() throw ( ConfigError, RuntimeError )
 {
   m_stop = false;
-  onConfigure( m_settings );
-  onInitialize( m_settings );
+  onConfigure(  );
+  onInitialize(  );
 
-  HttpServer::startGlobal( m_settings );
+  HttpServer::startGlobal(  );
 
   if( !thread_spawn( &startThread, this, m_threadid ) )
     throw RuntimeError("Unable to spawn thread");
@@ -203,8 +199,8 @@ void Initiator::start() throw ( ConfigError, RuntimeError )
 void Initiator::block() throw ( ConfigError, RuntimeError )
 {
   m_stop = false;
-  onConfigure( m_settings );
-  onInitialize( m_settings );
+  onConfigure(  );
+  onInitialize(  );
 
   startThread(this);
 }
@@ -214,8 +210,8 @@ bool Initiator::poll( double timeout ) throw ( ConfigError, RuntimeError )
   if( m_firstPoll )
   {
     m_stop = false;
-    onConfigure( m_settings );
-    onInitialize( m_settings );
+    onConfigure(  );
+    onInitialize(  );
     connect();
     m_firstPoll = false;
   }

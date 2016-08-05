@@ -78,7 +78,7 @@ throw( ConfigError)
 }
 
 int Dictionary::getDay( const std::string& key ) const
-throw( ConfigError, FieldConvertError )
+throw (ConfigError )
 {
   try
   {
@@ -93,7 +93,6 @@ throw( ConfigError, FieldConvertError )
     if( abbr == "th" ) return 5;
     if( abbr == "fr" ) return 6;
     if( abbr == "sa" ) return 7;
-    if( value.size() < 2 ) throw FieldConvertError(0);
   }
   catch ( FieldConvertError& )
   {

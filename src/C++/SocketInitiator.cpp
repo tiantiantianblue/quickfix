@@ -30,10 +30,9 @@
 namespace FIX
 {
 SocketInitiator::SocketInitiator( Application& application,
-                                  MessageStoreFactory& factory,
-                                  const SessionSettings& settings )
+                                  MessageStoreFactory& factory )
 throw( ConfigError )
-: Initiator( application, factory, settings ),
+: Initiator( application, factory ),
   m_connector( 1 ), m_lastConnect( 0 ),
   m_reconnectInterval( 30 ), m_noDelay( false ), m_sendBufSize( 0 ),
   m_rcvBufSize( 0 ) 
@@ -42,10 +41,9 @@ throw( ConfigError )
 
 SocketInitiator::SocketInitiator( Application& application,
                                   MessageStoreFactory& factory,
-                                  const SessionSettings& settings,
                                   LogFactory& logFactory )
 throw( ConfigError )
-: Initiator( application, factory, settings, logFactory ),
+: Initiator( application, factory, logFactory ),
   m_connector( 1 ), m_lastConnect( 0 ),
   m_reconnectInterval( 30 ), m_noDelay( false ), m_sendBufSize( 0 ),
   m_rcvBufSize( 0 )

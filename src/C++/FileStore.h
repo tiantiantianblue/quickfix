@@ -39,8 +39,8 @@ class Session;
 class FileStoreFactory : public MessageStoreFactory
 {
 public:
-  FileStoreFactory( const SessionSettings& settings )
-: m_settings( settings ) {};
+  FileStoreFactory()
+ {};
   FileStoreFactory( const std::string& path )
 : m_path( path ) {};
 
@@ -48,7 +48,7 @@ public:
   void destroy( MessageStore* );
 private:
   std::string m_path;
-  SessionSettings m_settings;
+  
 };
 /*! @} */
 

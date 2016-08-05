@@ -92,7 +92,7 @@ private:
   MessageStore* create( const SessionID& s, const Dictionary& );
 
   MySQLConnectionPoolPtr m_connectionPoolPtr;
-  SessionSettings m_settings;
+  
   Dictionary m_dictionary;
   std::string m_database;
   std::string m_user;

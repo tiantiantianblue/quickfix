@@ -30,6 +30,7 @@
 
 namespace FIX
 {
+	std::string SessionSettings::m_file;
 	SessionSettings::SessionSettings(std::istream& stream)
 		throw(ConfigError)
 	{

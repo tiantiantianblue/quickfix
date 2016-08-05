@@ -51,10 +51,8 @@ class Client;
 class Initiator
 {
 public:
-  Initiator( Application&, MessageStoreFactory&,
-             const SessionSettings& ) throw( ConfigError );
-  Initiator( Application&, MessageStoreFactory&,
-             const SessionSettings&, LogFactory& ) throw( ConfigError );
+  Initiator( Application&, MessageStoreFactory& ) throw( ConfigError );
+  Initiator( Application&, MessageStoreFactory&, LogFactory& ) throw( ConfigError );
 
   virtual ~Initiator();
 
@@ -107,9 +105,9 @@ private:
   void initialize() throw ( ConfigError );
 
   /// Implemented to configure acceptor
-  virtual void onConfigure( const SessionSettings& ) throw ( ConfigError ) {};
+  virtual void onConfigure(  ) throw ( ConfigError ) {};
   /// Implemented to initialize initiator
-  virtual void onInitialize( const SessionSettings& ) throw ( RuntimeError ) {};
+  virtual void onInitialize( ) throw ( RuntimeError ) {};
   /// Implemented to start connecting to targets.
   virtual void onStart() = 0;
   /// Implemented to connect and poll for events.
@@ -135,7 +133,6 @@ private:
   thread_id m_threadid;
   Application& m_application;
   MessageStoreFactory& m_messageStoreFactory;
-  SessionSettings m_settings;
   LogFactory* m_pLogFactory;
   Log* m_pLog;
   NullLog m_nullLog;

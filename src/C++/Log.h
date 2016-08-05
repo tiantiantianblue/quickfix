@@ -56,8 +56,8 @@ public:
 class ScreenLogFactory : public LogFactory
 {
 public:
-  ScreenLogFactory( const SessionSettings& settings )
-: m_useSettings( true ), m_settings( settings ) {};
+  ScreenLogFactory()
+: m_useSettings( true ) {};
   ScreenLogFactory( bool incoming, bool outgoing, bool event )
 : m_incoming( incoming ), m_outgoing( outgoing ), m_event( event ), m_useSettings( false ) {}
 
@@ -72,7 +72,6 @@ private:
   bool m_outgoing;
   bool m_event;
   bool m_useSettings;
-  SessionSettings m_settings;
 };
 
 /**

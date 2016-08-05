@@ -34,18 +34,18 @@ Mutex HttpServer::s_mutex;
 int HttpServer::s_count = 0;
 HttpServer* HttpServer::s_pServer = 0;
 
-void HttpServer::startGlobal( const SessionSettings& s ) 
+void HttpServer::startGlobal() 
 throw ( ConfigError, RuntimeError )
 {
   Locker l( s_mutex );
 
-  if( !s.get().has(HTTP_ACCEPT_PORT) )
+  if( !SessionSettings::instance().get().has(HTTP_ACCEPT_PORT) )
     return;
 
   s_count += 1;
   if( !s_pServer )
   {
-    s_pServer = new HttpServer( s );
+    s_pServer = new HttpServer();
     s_pServer->start();
   }
 }
@@ -63,16 +63,16 @@ void HttpServer::stopGlobal()
   }  
 }
 
-HttpServer::HttpServer( const SessionSettings& settings ) throw( ConfigError )
-: m_pServer( 0 ), m_settings( settings ), m_threadid( 0 ), m_port( 0 ), m_stop( false ) {}
+HttpServer::HttpServer(  ) throw( ConfigError )
+: m_pServer( 0 ), m_threadid( 0 ), m_port( 0 ), m_stop( false ) {}
 
-void HttpServer::onConfigure( const SessionSettings& s )
+void HttpServer::onConfigure()
 throw ( ConfigError )
 {  
-  m_port = s.get().getInt( HTTP_ACCEPT_PORT );
+  m_port = SessionSettings::instance().get().getInt( HTTP_ACCEPT_PORT );
 }
 
-void HttpServer::onInitialize( const SessionSettings& s )
+void HttpServer::onInitialize()
 throw ( RuntimeError )
 {
   try
@@ -89,8 +89,8 @@ throw ( RuntimeError )
 void HttpServer::start() throw ( ConfigError, RuntimeError )
 {
   m_stop = false;
-  onConfigure( m_settings );
-  onInitialize( m_settings );
+  onConfigure();
+  onInitialize();
 
   if( !thread_spawn( &startThread, this, m_threadid ) )
     throw RuntimeError("Unable to spawn thread");

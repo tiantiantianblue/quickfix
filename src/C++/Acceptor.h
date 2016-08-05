@@ -49,17 +49,13 @@ class Session;
 class Acceptor
 {
 public:
-  Acceptor( Application&, MessageStoreFactory&,
-            const SessionSettings& ) throw( ConfigError );
-  Acceptor( Application&, MessageStoreFactory&,
-            const SessionSettings&, LogFactory& ) throw( ConfigError );
+  Acceptor( Application&, MessageStoreFactory&,LogFactory& ) throw( ConfigError );
 
   virtual ~Acceptor();
 
   Log* getLog() 
   { 
-    if( m_pLog ) return m_pLog;
-    return &m_nullLog;
+     return m_pLog;
   }
 
   /// Start acceptor.
@@ -89,7 +85,7 @@ public:
 private:
   void initialize() throw ( ConfigError );
   /// Implemented to initialize acceptor
-  virtual void onInitialize( const SessionSettings& ) throw ( RuntimeError ) {};
+  virtual void onInitialize() throw ( RuntimeError ) {};
   /// Implemented to start listening for connections.
   virtual void onStart() = 0;
   /// Implemented to stop a running acceptor.
@@ -105,10 +101,8 @@ private:
   SessionIDs m_sessionIDs;
   Application& m_application;
   MessageStoreFactory& m_messageStoreFactory;
-  SessionSettings m_settings;
   LogFactory* m_pLogFactory;
   Log* m_pLog;
-  NullLog m_nullLog;
   bool m_firstPoll;
   bool m_stop;
 };

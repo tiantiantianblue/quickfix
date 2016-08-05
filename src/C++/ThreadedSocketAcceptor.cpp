@@ -32,16 +32,8 @@ namespace FIX
 ThreadedSocketAcceptor::ThreadedSocketAcceptor(
   Application& application,
   MessageStoreFactory& factory,
-  const SessionSettings& settings ) throw( ConfigError )
-: Acceptor( application, factory, settings )
-{ socket_init(); }
-
-ThreadedSocketAcceptor::ThreadedSocketAcceptor(
-  Application& application,
-  MessageStoreFactory& factory,
-  const SessionSettings& settings,
   LogFactory& logFactory ) throw( ConfigError )
-: Acceptor( application, factory, settings, logFactory )
+: Acceptor( application, factory,  logFactory )
 { 
   socket_init(); 
 }
@@ -51,17 +43,17 @@ ThreadedSocketAcceptor::~ThreadedSocketAcceptor()
   socket_term(); 
 }
 
-void ThreadedSocketAcceptor::onInitialize( const SessionSettings& s )
+void ThreadedSocketAcceptor::onInitialize()
 throw ( RuntimeError )
 {
   short port = 0;
   std::set<int> ports;
 
-  std::set<SessionID> sessions = s.getSessions();
+  std::set<SessionID> sessions = SessionSettings::instance().getSessions();
   std::set<SessionID>::iterator i = sessions.begin();
   for( ; i != sessions.end(); ++i )
   {
-    const Dictionary& settings = s.get( *i );
+    const Dictionary& settings = SessionSettings::instance().get( *i );
     port = (short)settings.getInt( SOCKET_ACCEPT_PORT );
 
     m_portToSessions[port].insert( *i );
@@ -81,7 +73,6 @@ throw ( RuntimeError )
 
     const int rcvBufSize = settings.has( SOCKET_RECEIVE_BUFFER_SIZE ) ?
       settings.getInt( SOCKET_RECEIVE_BUFFER_SIZE ) : 0;
-
     int socket = socket_createAcceptor( port, reuseAddress );
     if( socket < 0 )
     {

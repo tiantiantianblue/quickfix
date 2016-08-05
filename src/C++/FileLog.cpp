@@ -38,7 +38,7 @@ Log* FileLogFactory::create()
     std::string path;
     std::string backupPath;
 
-    Dictionary settings = m_settings.get();
+    Dictionary settings = SessionSettings::instance().get();
     path = settings.getString( FILE_LOG_PATH );
     backupPath = path;
     if( settings.has( FILE_LOG_BACKUP_PATH ) )
@@ -62,7 +62,7 @@ Log* FileLogFactory::create( const SessionID& s )
 
   std::string path;
   std::string backupPath;
-  Dictionary settings = m_settings.get( s );
+  Dictionary settings = SessionSettings::instance().get( s );
   path = settings.getString( FILE_LOG_PATH );
   backupPath = path;
   if( settings.has( FILE_LOG_BACKUP_PATH ) )

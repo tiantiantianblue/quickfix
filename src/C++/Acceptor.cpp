@@ -35,29 +35,11 @@ namespace FIX
 {
 Acceptor::Acceptor( Application& application,
                     MessageStoreFactory& messageStoreFactory,
-                    const SessionSettings& settings )
-throw( ConfigError )
-  : m_threadid( 0 ),
-  m_application( application ),
-  m_messageStoreFactory( messageStoreFactory ),
-  m_settings( settings ),
-  m_pLogFactory( 0 ),
-  m_pLog( 0 ),
-  m_firstPoll( true ),
-  m_stop( true )
-{
-  initialize();
-}
-
-Acceptor::Acceptor( Application& application,
-                    MessageStoreFactory& messageStoreFactory,
-                    const SessionSettings& settings,
                     LogFactory& logFactory )
 throw( ConfigError )
 : m_threadid( 0 ),
   m_application( application ),
   m_messageStoreFactory( messageStoreFactory ),
-  m_settings( settings ),
   m_pLogFactory( &logFactory ),
   m_pLog( logFactory.create() ),
   m_firstPoll( true ),
@@ -68,7 +50,7 @@ throw( ConfigError )
 
 void Acceptor::initialize() throw ( ConfigError )
 {
-  std::set < SessionID > sessions = m_settings.getSessions();
+  std::set < SessionID > sessions = SessionSettings::instance().getSessions();
   std::set < SessionID > ::iterator i;
 
   SessionFactory factory( m_application, m_messageStoreFactory,
@@ -76,13 +58,12 @@ void Acceptor::initialize() throw ( ConfigError )
 
   for ( i = sessions.begin(); i != sessions.end(); ++i )
   {
-    if ( m_settings.get( *i ).getString( CONNECTION_TYPE ) == "acceptor" )
+    if (SessionSettings::instance().get( *i ).getString( CONNECTION_TYPE ) == "acceptor" )
     {
       m_sessionIDs.insert( *i );
-      m_sessions[ *i ] = factory.create( *i, m_settings.get( *i ) );
+      m_sessions[ *i ] = factory.create( *i, SessionSettings::instance().get( *i ) );
     }
   }
-
   if ( m_sessions.empty() )
     throw ConfigError( "No sessions defined for acceptor" );
 }
@@ -144,7 +125,7 @@ const Dictionary* const Acceptor::getSessionSettings( const SessionID& sessionID
 {
   try
   {
-    return &m_settings.get( sessionID );
+    return &SessionSettings::instance().get( sessionID );
   }
   catch( ConfigError& )
   {
@@ -155,9 +136,9 @@ const Dictionary* const Acceptor::getSessionSettings( const SessionID& sessionID
 void Acceptor::start() throw ( ConfigError, RuntimeError )
 {
   m_stop = false;
-  onInitialize( m_settings );
+  onInitialize();
 
-  HttpServer::startGlobal( m_settings );
+  HttpServer::startGlobal();
 
   if( !thread_spawn( &startThread, this, m_threadid ) )
     throw RuntimeError("Unable to spawn thread");

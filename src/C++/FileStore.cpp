@@ -155,10 +155,11 @@ void FileStore::populateCache()
 
 MessageStore* FileStoreFactory::create( const SessionID& s )
 {
-  if ( m_path.size() ) return new FileStore( m_path, s );
+  if ( m_path.size() ) 
+	  return new FileStore( m_path, s );
 
   std::string path;
-  Dictionary settings = m_settings.get( s );
+  Dictionary settings = SessionSettings::instance().get( s );
   path = settings.getString( FILE_STORE_PATH );
   return new FileStore( path, s );
 }

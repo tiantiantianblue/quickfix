@@ -703,7 +703,6 @@
     <ClCompile Include="SessionFactory.cpp" />
     <ClCompile Include="SessionSettings.cpp" />
     <ClCompile Include="Settings.cpp" />
-    <ClCompile Include="SocketAcceptor.cpp" />
     <ClCompile Include="SocketConnection.cpp" />
     <ClCompile Include="SocketConnector.cpp" />
     <ClCompile Include="SocketInitiator.cpp" />

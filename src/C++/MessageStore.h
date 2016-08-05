@@ -101,20 +101,20 @@ public:
   bool set( int, const std::string& ) throw ( IOException );
   void get( int, int, std::vector < std::string > & ) const throw ( IOException );
 
-  int getNextSenderMsgSeqNum() const throw ( IOException )
+  int getNextSenderMsgSeqNum() const
   { return m_nextSenderMsgSeqNum; }
-  int getNextTargetMsgSeqNum() const throw ( IOException )
+  int getNextTargetMsgSeqNum() const
   { return m_nextTargetMsgSeqNum; }
-  void setNextSenderMsgSeqNum( int value ) throw ( IOException )
+  void setNextSenderMsgSeqNum( int value )
   { m_nextSenderMsgSeqNum = value; }
-  void setNextTargetMsgSeqNum( int value ) throw ( IOException )
+  void setNextTargetMsgSeqNum( int value ) 
   { m_nextTargetMsgSeqNum = value; }
-  void incrNextSenderMsgSeqNum() throw ( IOException )
+  void incrNextSenderMsgSeqNum()
   { ++m_nextSenderMsgSeqNum; }
-  void incrNextTargetMsgSeqNum() throw ( IOException )
+  void incrNextTargetMsgSeqNum()
   { ++m_nextTargetMsgSeqNum; }
 
-  void setCreationTime( const UtcTimeStamp& creationTime ) throw ( IOException )
+  void setCreationTime( const UtcTimeStamp& creationTime )
   { m_creationTime = creationTime; }
   UtcTimeStamp getCreationTime() const throw ( IOException )
   { return m_creationTime; }

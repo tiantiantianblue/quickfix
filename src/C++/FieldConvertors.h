@@ -719,8 +719,11 @@ struct UtcTimeOnlyConvertor
 
     switch( value.size() )
     {
-      case 12: haveMilliseconds = true;
-      case 8: break;
+      case 12: 
+		  haveMilliseconds = true;
+		  break;
+      case 8: 
+		  break;
       default: throw FieldConvertError(value);
     }
 

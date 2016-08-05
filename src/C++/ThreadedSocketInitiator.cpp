@@ -31,9 +31,8 @@ namespace FIX
 {
 ThreadedSocketInitiator::ThreadedSocketInitiator(
   Application& application,
-  MessageStoreFactory& factory,
-  const SessionSettings& settings ) throw( ConfigError )
-: Initiator( application, factory, settings ),
+  MessageStoreFactory& factory ) throw( ConfigError )
+: Initiator( application, factory ),
   m_lastConnect( 0 ), m_reconnectInterval( 30 ), m_noDelay( false ), 
   m_sendBufSize( 0 ), m_rcvBufSize( 0 ) 
 { 
@@ -43,9 +42,8 @@ ThreadedSocketInitiator::ThreadedSocketInitiator(
 ThreadedSocketInitiator::ThreadedSocketInitiator(
   Application& application,
   MessageStoreFactory& factory,
-  const SessionSettings& settings,
   LogFactory& logFactory ) throw( ConfigError )
-: Initiator( application, factory, settings, logFactory ),
+: Initiator( application, factory, logFactory ),
   m_lastConnect( 0 ), m_reconnectInterval( 30 ), m_noDelay( false ), 
   m_sendBufSize( 0 ), m_rcvBufSize( 0 ) 
 { 

@@ -37,10 +37,8 @@ class SocketAcceptor : public Acceptor, SocketServer::Strategy
 {
   friend class SocketConnection;
 public:
-  SocketAcceptor( Application&, MessageStoreFactory&,
-                  const SessionSettings& ) throw( ConfigError );
-  SocketAcceptor( Application&, MessageStoreFactory&,
-                  const SessionSettings&, LogFactory& ) throw( ConfigError );
+  SocketAcceptor( Application&, MessageStoreFactory& ) throw( ConfigError );
+  SocketAcceptor( Application&, MessageStoreFactory&, LogFactory& ) throw( ConfigError );
 
   virtual ~SocketAcceptor();
 

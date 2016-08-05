@@ -2065,9 +2065,6 @@
     <ClCompile Include="MessageSorters.cpp">
       <Filter>Message\Source</Filter>
     </ClCompile>
-    <ClCompile Include="SocketAcceptor.cpp">
-      <Filter>Socket\Source</Filter>
-    </ClCompile>
     <ClCompile Include="SocketConnection.cpp">
       <Filter>Socket\Source</Filter>
     </ClCompile>

@@ -39,11 +39,8 @@ namespace FIX
 class ThreadedSocketInitiator : public Initiator
 {
 public:
-  ThreadedSocketInitiator( Application&, MessageStoreFactory&,
-                           const SessionSettings& ) throw( ConfigError );
-  ThreadedSocketInitiator( Application&, MessageStoreFactory&,
-                           const SessionSettings&,
-                           LogFactory& ) throw( ConfigError );
+  ThreadedSocketInitiator( Application&, MessageStoreFactory& ) throw( ConfigError );
+  ThreadedSocketInitiator( Application&, MessageStoreFactory&,LogFactory& ) throw( ConfigError );
 
   virtual ~ThreadedSocketInitiator();
 
@@ -68,7 +65,7 @@ private:
 
   void getHost( const SessionID&, const Dictionary&, std::string&, short& );
 
-  SessionSettings m_settings;
+  
   SessionToHostNum m_sessionToHostNum;
   time_t m_lastConnect;
   int m_reconnectInterval;

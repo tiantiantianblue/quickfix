@@ -40,8 +40,8 @@ namespace FIX
 class FileLogFactory : public LogFactory
 {
 public:
-  FileLogFactory( const SessionSettings& settings )
-: m_settings( settings ), m_globalLog(0), m_globalLogCount(0) {};
+  FileLogFactory()
+:  m_globalLog(0), m_globalLogCount(0) {};
   FileLogFactory( const std::string& path )
 : m_path( path ), m_backupPath( path ), m_globalLog(0), m_globalLogCount(0) {};
   FileLogFactory( const std::string& path, const std::string& backupPath )
@@ -55,7 +55,7 @@ public:
 private:
   std::string m_path;
   std::string m_backupPath;
-  SessionSettings m_settings;
+  
   Log* m_globalLog;
   int m_globalLogCount;
 };

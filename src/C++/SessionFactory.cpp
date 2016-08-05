@@ -87,7 +87,6 @@ Session* SessionFactory::create( const SessionID& sessionID,
     endDay = settings.getDay( END_DAY );
   }
   catch( ConfigError & ) {}
-  catch( FieldConvertError & e ) { throw ConfigError( e.what() ); }
 
   UtcTimeOnly startTime;
   UtcTimeOnly endTime;
@@ -99,8 +98,7 @@ Session* SessionFactory::create( const SessionID& sessionID,
               ( settings.getString( END_TIME ) );
   }
   catch ( FieldConvertError & e ) { throw ConfigError( e.what() ); }
-  TimeRange utcSessionTime
-    ( startTime, endTime, startDay, endDay );
+  TimeRange utcSessionTime(startTime, endTime, startDay, endDay );
   TimeRange localSessionTime
     ( LocalTimeOnly(startTime.getHour(), startTime.getMinute(), startTime.getSecond()),
       LocalTimeOnly(endTime.getHour(), endTime.getMinute(), endTime.getSecond()),
@@ -115,7 +113,8 @@ Session* SessionFactory::create( const SessionID& sessionID,
   if ( connectionType == "initiator" )
   {
     heartBtInt = HeartBtInt( settings.getInt( HEARTBTINT ) );
-    if ( heartBtInt <= 0 ) throw ConfigError( "Heartbeat must be greater than zero" );
+    if ( heartBtInt <= 0 ) 
+		throw ConfigError( "Heartbeat must be greater than zero" );
   }
   std::auto_ptr<Session> pSession;
   pSession.reset( new Session( m_application, m_messageStoreFactory,
@@ -130,7 +129,6 @@ Session* SessionFactory::create( const SessionID& sessionID,
     logoutDay = settings.getDay( LOGOUT_DAY );
   }
   catch( ConfigError & ) {}
-  catch( FieldConvertError & e ) { throw ConfigError( e.what() ); }
 
   UtcTimeOnly logonTime( startTime );
   UtcTimeOnly logoutTime( endTime );

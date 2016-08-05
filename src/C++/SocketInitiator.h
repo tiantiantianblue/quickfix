@@ -36,10 +36,8 @@ namespace FIX
 class SocketInitiator : public Initiator, SocketConnector::Strategy
 {
 public:
-  SocketInitiator( Application&, MessageStoreFactory&,
-                   const SessionSettings& ) throw( ConfigError );
-  SocketInitiator( Application&, MessageStoreFactory&,
-                   const SessionSettings&, LogFactory& ) throw( ConfigError );
+  SocketInitiator( Application&, MessageStoreFactory& ) throw( ConfigError );
+  SocketInitiator( Application&, MessageStoreFactory&, LogFactory& ) throw( ConfigError );
 
   virtual ~SocketInitiator();
 
@@ -64,7 +62,6 @@ private:
 
   void getHost( const SessionID&, const Dictionary&, std::string&, short& );
 
-  SessionSettings m_settings;
   SessionToHostNum m_sessionToHostNum;
   SocketConnector m_connector;
   SocketConnections m_pendingConnections;

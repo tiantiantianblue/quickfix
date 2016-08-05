@@ -131,7 +131,7 @@ private:
   void initLog( const Dictionary& settings, MySQLLog& log );
 
   MySQLConnectionPoolPtr m_connectionPoolPtr;
-  SessionSettings m_settings;
+  
   std::string m_database;
   std::string m_user;
   std::string m_password;
