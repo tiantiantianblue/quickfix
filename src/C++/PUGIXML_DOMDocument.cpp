@@ -28,75 +28,78 @@
 
 namespace FIX
 {
-  bool PUGIXML_DOMAttributes::get( const std::string& name, std::string& value )
-  {
-    pugi::xml_attribute result = m_pNode.attribute(name.c_str());
-    if( !result ) return false;
-    value = result.value();
-    return true;
-  }
+	bool PUGIXML_DOMAttributes::get(const std::string& name, std::string& value)
+	{
+		pugi::xml_attribute result = m_pNode.attribute(name.c_str());
+		if (!result) return false;
+		value = result.value();
+		return true;
+	}
 
-  DOMAttributes::map PUGIXML_DOMAttributes::toMap()
-  {
-    return DOMAttributes::map();
-  }
+	DOMAttributes::map PUGIXML_DOMAttributes::toMap()
+	{
+		return DOMAttributes::map();
+	}
 
-  DOMNodePtr PUGIXML_DOMNode::getFirstChildNode()
-  {
-    pugi::xml_node pNode = m_pNode.first_child();
-    if( !pNode ) return DOMNodePtr();
-    return DOMNodePtr(new PUGIXML_DOMNode(pNode));
-  }
+	DOMNodePtr PUGIXML_DOMNode::getFirstChildNode()
+	{
+		pugi::xml_node pNode = m_pNode.first_child();
+		if (!pNode) return DOMNodePtr();
+		return DOMNodePtr(new PUGIXML_DOMNode(pNode));
+	}
 
-  DOMNodePtr PUGIXML_DOMNode::getNextSiblingNode()
-  {
-    pugi::xml_node pNode = m_pNode.next_sibling();
-    if( !pNode ) return DOMNodePtr();
-    return DOMNodePtr(new PUGIXML_DOMNode(pNode));
-  }
+	DOMNodePtr PUGIXML_DOMNode::getNextSiblingNode()
+	{
+		pugi::xml_node pNode = m_pNode.next_sibling();
+		if (!pNode) return DOMNodePtr();
+		return DOMNodePtr(new PUGIXML_DOMNode(pNode));
+	}
 
-  DOMAttributesPtr PUGIXML_DOMNode::getAttributes()
-  {
-    return DOMAttributesPtr(new PUGIXML_DOMAttributes(m_pNode));
-  }
+	DOMAttributesPtr PUGIXML_DOMNode::getAttributes()
+	{
+		return DOMAttributesPtr(new PUGIXML_DOMAttributes(m_pNode));
+	}
 
-  std::string PUGIXML_DOMNode::getName()
-  {
-    return m_pNode.name();
-  }
+	std::string PUGIXML_DOMNode::getName()
+	{
+		return m_pNode.name();
+	}
 
-  std::string PUGIXML_DOMNode::getText()
-  {
-    return m_pNode.value();
-  }
-  bool PUGIXML_DOMDocument::load( std::istream& stream )
-  {
-    try
-    {
-      return m_pDoc.load(stream);
-    }
-    catch( ... ) { return false; }
-  }
+	std::string PUGIXML_DOMNode::getText()
+	{
+		return m_pNode.value();
+	}
+	bool PUGIXML_DOMDocument::load(std::istream& stream)
+	{
+		try
+		{
+			return m_pDoc.load(stream);
+		}
+		catch (...) { return false; }
+	}
 
-  bool PUGIXML_DOMDocument::load( const std::string& url )
-  {
-    try
-    {
-      return m_pDoc.load_file(url.c_str());
-    }
-    catch( ... ) { return false; }
-  }
+	bool PUGIXML_DOMDocument::load(const std::string& url)
+	{
+		try
+		{
+			return m_pDoc.load_file(url.c_str());
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
 
-  bool PUGIXML_DOMDocument::xml( std::ostream& out )
-  {
-    return false;
-  }
+	bool PUGIXML_DOMDocument::xml(std::ostream& out)
+	{
+		return false;
+	}
 
-  DOMNodePtr PUGIXML_DOMDocument::getNode( const std::string& XPath )
-  {
-    pugi::xpath_node result = m_pDoc.select_single_node(XPath.c_str());
-    if( !result ) return DOMNodePtr();
+	DOMNodePtr PUGIXML_DOMDocument::getNode(const std::string& XPath)
+	{
+		pugi::xpath_node result = m_pDoc.select_single_node(XPath.c_str());
+		if (!result) return DOMNodePtr();
 
-    return DOMNodePtr(new PUGIXML_DOMNode(result.node()));
-  }
+		return DOMNodePtr(new PUGIXML_DOMNode(result.node()));
+	}
 }

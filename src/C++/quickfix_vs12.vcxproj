@@ -19,6 +19,7 @@
     <ClInclude Include="DatabaseConnectionID.h" />
     <ClInclude Include="DatabaseConnectionPool.h" />
     <ClInclude Include="DataDictionary.h" />
+    <ClInclude Include="DataDictionaryPool.h" />
     <ClInclude Include="DataDictionaryProvider.h" />
     <ClInclude Include="Dictionary.h" />
     <ClInclude Include="DOMDocument.h" />
@@ -674,6 +675,7 @@
   <ItemGroup>
     <ClCompile Include="Acceptor.cpp" />
     <ClCompile Include="DataDictionary.cpp" />
+    <ClCompile Include="DataDictionaryPool.cpp" />
     <ClCompile Include="DataDictionaryProvider.cpp" />
     <ClCompile Include="Dictionary.cpp" />
     <ClCompile Include="FieldMap.cpp" />

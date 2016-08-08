@@ -29,6 +29,7 @@
 #include "SessionFactory.h"
 #include "SessionSettings.h"
 #include "Session.h"
+#include "DataDictionaryPool.h"
 
 #include <memory>
 
@@ -40,19 +41,6 @@ namespace FIX
 		std::string connectionType = settings.getString(CONNECTION_TYPE);
 		if (connectionType == "acceptor" && settings.has(SESSION_QUALIFIER))
 			throw ConfigError("SessionQualifier cannot be used with acceptor.");
-
-		DataDictionaryProvider dataDictionaryProvider;
-		if (settings.getBool(USE_DATA_DICTIONARY))
-		{
-			if (sessionID.isFIXT())
-			{
-				processFixtDataDictionaries(sessionID, settings, dataDictionaryProvider);
-			}
-			else
-			{
-				processFixDataDictionary(sessionID, settings, dataDictionaryProvider);
-			}
-		}
 
 		int startDay = settings.getDay(START_DAY);
 		int endDay = settings.getDay(END_DAY);
@@ -78,9 +66,12 @@ namespace FIX
 				throw ConfigError("Heartbeat must be greater than zero");
 		}
 
+		std::string dataDicPath = sessionID.isFIXT() ? TRANSPORT_DATA_DICTIONARY : DATA_DICTIONARY;
+
 		auto pSession = std::make_shared<Session>(m_application, m_messageStoreFactory,
-			sessionID, dataDictionaryProvider, sessionTimeRange,
-			heartBtInt, m_pLogFactory);
+			sessionID, sessionTimeRange, heartBtInt, m_pLogFactory,
+			getDataDictionary(settings.getString(dataDicPath)),
+			getDataDictionary(settings.getString(APP_DATA_DICTIONARY)));
 
 		if (sessionID.isFIXT())
 		{
@@ -144,76 +135,9 @@ namespace FIX
 			pSession->setPersistMessages(settings.getBool(PERSIST_MESSAGES));
 		if (settings.has(VALIDATE_LENGTH_AND_CHECKSUM))
 			pSession->setValidateLengthAndChecksum(settings.getBool(VALIDATE_LENGTH_AND_CHECKSUM));
-
 		return pSession;
 	}
-
-	ptr::shared_ptr<DataDictionary> SessionFactory::createDataDictionary(const SessionID& sessionID,
-		const Dictionary& settings,
-		const std::string& settingsKey) throw(ConfigError)
-	{
-		ptr::shared_ptr<DataDictionary> pDD;
-		std::string path = settings.getString(settingsKey);
-		Dictionaries::iterator i = m_dictionaries.find(path);
-		if (i != m_dictionaries.end())
-		{
-			pDD = i->second;
-		}
-		else
-		{
-			pDD = std::make_shared<DataDictionary>(path);
-			m_dictionaries[path] = pDD;
-		}
-
-		auto pCopyOfDD = std::make_shared<DataDictionary>(*pDD);
-
-		if (settings.has(VALIDATE_FIELDS_OUT_OF_ORDER))
-			pCopyOfDD->setCheckFieldsOutOfOrder(settings.getBool(VALIDATE_FIELDS_OUT_OF_ORDER));
-		if (settings.has(VALIDATE_FIELDS_HAVE_VALUES))
-			pCopyOfDD->setCheckFieldsHaveValues(settings.getBool(VALIDATE_FIELDS_HAVE_VALUES));
-		if (settings.has(VALIDATE_USER_DEFINED_FIELDS))
-			pCopyOfDD->setCheckUserDefinedFields(settings.getBool(VALIDATE_USER_DEFINED_FIELDS));
-
-		return pCopyOfDD;
-	}
-
-	void SessionFactory::processFixtDataDictionaries(const SessionID& sessionID,
-		const Dictionary& settings,
-		DataDictionaryProvider& provider) throw(ConfigError)
-	{
-		ptr::shared_ptr<DataDictionary> pDataDictionary = createDataDictionary(sessionID, settings, TRANSPORT_DATA_DICTIONARY);
-		provider.addTransportDataDictionary(sessionID.getBeginString(), pDataDictionary);
-
-		for (Dictionary::const_iterator data = settings.begin(); data != settings.end(); ++data)
-		{
-			const std::string& key = data->first;
-			const std::string frontKey = key.substr(0, strlen(APP_DATA_DICTIONARY));
-			if (frontKey == string_toUpper(APP_DATA_DICTIONARY))
-			{
-				if (key == string_toUpper(APP_DATA_DICTIONARY))
-				{
-					provider.addApplicationDataDictionary(Message::toApplVerID(settings.getString(DEFAULT_APPLVERID)),
-						createDataDictionary(sessionID, settings, APP_DATA_DICTIONARY));
-				}
-				else
-				{
-					std::string::size_type offset = key.find('.');
-					if (offset == std::string::npos)
-						throw ConfigError(std::string("Malformed ") + APP_DATA_DICTIONARY + ": " + key);
-					std::string beginStringQualifier = key.substr(offset + 1);
-					provider.addApplicationDataDictionary(Message::toApplVerID(beginStringQualifier),
-						createDataDictionary(sessionID, settings, key));
-				}
-			}
-		}
-	}
-
-	void SessionFactory::processFixDataDictionary(const SessionID& sessionID,
-		const Dictionary& settings,
-		DataDictionaryProvider& provider) throw(ConfigError)
-	{
-		std::shared_ptr<DataDictionary> pDataDictionary = createDataDictionary(sessionID, settings, DATA_DICTIONARY);
-		provider.addTransportDataDictionary(sessionID.getBeginString(), pDataDictionary);
-		provider.addApplicationDataDictionary(Message::toApplVerID(sessionID.getBeginString()), pDataDictionary);
-	}
 }
+
+
+

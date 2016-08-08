@@ -94,6 +94,7 @@ private:
 
   static THREAD_PROC startThread( void* p );
 
+
   typedef std::set < SessionID > SessionIDs;
   typedef std::map < SessionID, std::shared_ptr<Session> > Sessions;
 

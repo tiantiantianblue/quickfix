@@ -55,22 +55,9 @@ public:
 
   std::shared_ptr<Session> create( const SessionID& sessionID,
                    const Dictionary& settings ) throw( ConfigError );
+
 private:
   typedef std::map < std::string, ptr::shared_ptr<DataDictionary> > Dictionaries;
-
-  ptr::shared_ptr<DataDictionary> createDataDictionary(const SessionID& sessionID, 
-                                                       const Dictionary& settings, 
-                                                       const std::string& settingsKey) throw(ConfigError);
-
-  void processFixtDataDictionaries(const SessionID& sessionID, 
-                                   const Dictionary& settings, 
-                                   DataDictionaryProvider& provider) throw(ConfigError);
-
-  void processFixDataDictionary(const SessionID& sessionID, 
-                                const Dictionary& settings, 
-                                DataDictionaryProvider& provider) throw(ConfigError);
-
-  std::string toApplVerID(const std::string& value);
 
   Application& m_application;
   MessageStoreFactory& m_messageStoreFactory;

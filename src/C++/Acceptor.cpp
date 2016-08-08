@@ -26,169 +26,166 @@
 #include "Acceptor.h"
 #include "Utility.h"
 #include "Session.h"
-#include "SessionFactory.h"
 #include "HttpServer.h"
+#include "SessionFactory.h"
 #include <algorithm>
 #include <fstream>
 
 namespace FIX
 {
-Acceptor::Acceptor( Application& application,
-                    MessageStoreFactory& messageStoreFactory,
-                    LogFactory& logFactory )
-throw( ConfigError )
-: m_threadid( 0 ),
-  m_application( application ),
-  m_messageStoreFactory( messageStoreFactory ),
-  m_pLogFactory( &logFactory ),
-  m_pLog( logFactory.create() ),
-  m_firstPoll( true ),
-  m_stop( true )
-{
-  initialize();
-}
+	Acceptor::Acceptor(Application& application,
+		MessageStoreFactory& messageStoreFactory,
+		LogFactory& logFactory)
+		throw(ConfigError)
+		: m_threadid(0),
+		m_application(application),
+		m_messageStoreFactory(messageStoreFactory),
+		m_pLogFactory(&logFactory),
+		m_pLog(logFactory.create()),
+		m_firstPoll(true),
+		m_stop(true)
+	{
+		initialize();
+	}
 
-void Acceptor::initialize() throw ( ConfigError )
-{
-  std::set < SessionID > sessions = SessionSettings::instance().getSessions();
+	void Acceptor::initialize() throw (ConfigError)
+	{
+		SessionFactory factory(m_application, m_messageStoreFactory,
+			m_pLogFactory);
+		for (const auto kv : SessionSettings::instance().getDictionaries())
+		{
+			if (kv.second.getString(CONNECTION_TYPE) == "acceptor")
+			{
+				m_sessionIDs.insert(kv.first);
+				m_sessions[kv.first] = factory.create(kv.first, kv.second);
+			}
+		}
 
-  SessionFactory factory( m_application, m_messageStoreFactory,
-                          m_pLogFactory );
+		if (m_sessions.empty())
+			throw ConfigError("No sessions defined for acceptor");
+	}
 
-  for (const auto kv: SessionSettings::instance().getDictionaries())
-  {
-    if (kv.second.getString( CONNECTION_TYPE ) == "acceptor" )
-    {
-      m_sessionIDs.insert( kv.first );
-      m_sessions[ kv.first ] = factory.create(kv.first, kv.second );
-    }
-  }
+	Acceptor::~Acceptor()
+	{
+		if (m_pLogFactory && m_pLog)
+			m_pLogFactory->destroy(m_pLog);
+	}
 
-  if ( m_sessions.empty() )
-    throw ConfigError( "No sessions defined for acceptor" );
-}
+	std::shared_ptr<Session> Acceptor::getSession
+	(const std::string& msg, Responder& responder)
+	{
+		Message message;
+		if (!message.setStringHeader(msg))
+			return 0;
 
-Acceptor::~Acceptor()
-{
-  if( m_pLogFactory && m_pLog )
-    m_pLogFactory->destroy( m_pLog );
-}
+		BeginString beginString;
+		SenderCompID clSenderCompID;
+		TargetCompID clTargetCompID;
+		MsgType msgType;
+		try
+		{
+			message.getHeader().getField(beginString);
+			message.getHeader().getField(clSenderCompID);
+			message.getHeader().getField(clTargetCompID);
+			message.getHeader().getField(msgType);
+			if (msgType != "A") return 0;
 
-std::shared_ptr<Session> Acceptor::getSession
-( const std::string& msg, Responder& responder )
-{
-  Message message;
-  if ( !message.setStringHeader( msg ) )
-    return 0;
+			SenderCompID senderCompID(clTargetCompID);
+			TargetCompID targetCompID(clSenderCompID);
+			SessionID sessionID(beginString, senderCompID, targetCompID);
 
-  BeginString beginString;
-  SenderCompID clSenderCompID;
-  TargetCompID clTargetCompID;
-  MsgType msgType;
-  try
-  {
-    message.getHeader().getField( beginString );
-    message.getHeader().getField( clSenderCompID );
-    message.getHeader().getField( clTargetCompID );
-    message.getHeader().getField( msgType );
-    if ( msgType != "A" ) return 0;
+			Sessions::iterator i = m_sessions.find(sessionID);
+			if (i != m_sessions.end())
+			{
+				i->second->setResponder(&responder);
+				return i->second;
+			}
+		}
+		catch (FieldNotFound&) {}
+		return 0;
+	}
 
-    SenderCompID senderCompID( clTargetCompID );
-    TargetCompID targetCompID( clSenderCompID );
-    SessionID sessionID( beginString, senderCompID, targetCompID );
+	std::shared_ptr<Session> Acceptor::getSession(const SessionID& sessionID)
+	{
+		return m_sessions[sessionID];
+	}
 
-    Sessions::iterator i = m_sessions.find( sessionID );
-    if ( i != m_sessions.end() )
-    {
-      i->second->setResponder( &responder );
-      return i->second;
-    }
-  }
-  catch ( FieldNotFound& ) {}
-  return 0;
-}
+	const Dictionary* const Acceptor::getSessionSettings(const SessionID& sessionID) const
+	{
+		try
+		{
+			return &SessionSettings::instance().get(sessionID);
+		}
+		catch (ConfigError&)
+		{
+			return 0;
+		}
+	}
 
-std::shared_ptr<Session> Acceptor::getSession( const SessionID& sessionID )
-{
-  return m_sessions[sessionID];
-}
+	void Acceptor::start() throw (ConfigError, RuntimeError)
+	{
+		m_stop = false;
+		onInitialize();
 
-const Dictionary* const Acceptor::getSessionSettings( const SessionID& sessionID ) const
-{
-  try
-  {
-    return &SessionSettings::instance().get( sessionID );
-  }
-  catch( ConfigError& )
-  {
-    return 0;
-  }
-}
+		HttpServer::startGlobal();
 
-void Acceptor::start() throw ( ConfigError, RuntimeError )
-{
-  m_stop = false;
-  onInitialize();
+		if (!thread_spawn(&startThread, this, m_threadid))
+			throw RuntimeError("Unable to spawn thread");
+	}
 
-  HttpServer::startGlobal();
+	void Acceptor::stop(bool force)
+	{
+		if (isStopped()) return;
 
-  if( !thread_spawn( &startThread, this, m_threadid ) )
-    throw RuntimeError("Unable to spawn thread");
-}
+		HttpServer::stopGlobal();
 
-void Acceptor::stop( bool force )
-{
-  if( isStopped() ) return;
+		std::vector<std::shared_ptr<Session> > enabledSessions;
 
-  HttpServer::stopGlobal();
+		Sessions sessions = m_sessions;
+		for (Sessions::iterator i = sessions.begin(); i != sessions.end(); ++i)
+		{
+			auto pSession = Session::lookupSession(i->first);
+			if (pSession && pSession->isEnabled())
+			{
+				enabledSessions.push_back(pSession);
+				pSession->logout();
+				Session::unregisterSession(pSession->getSessionID());
+			}
+		}
 
-  std::vector<std::shared_ptr<Session> > enabledSessions;
+		if (!force)
+		{
+			for (int second = 1; second <= 10 && isLoggedOn(); ++second)
+				process_sleep(1);
+		}
 
-  Sessions sessions = m_sessions;
-  for (Sessions::iterator i = sessions.begin(); i != sessions.end(); ++i )
-  {
-    auto pSession = Session::lookupSession(i->first);
-    if( pSession && pSession->isEnabled() )
-    {
-      enabledSessions.push_back( pSession );
-      pSession->logout();
-      Session::unregisterSession( pSession->getSessionID() );
-    }
-  }
+		m_stop = true;
+		onStop();
+		if (m_threadid)
+			thread_join(m_threadid);
+		m_threadid = 0;
 
-  if( !force )
-  {
-    for ( int second = 1; second <= 10 && isLoggedOn(); ++second )
-      process_sleep( 1 );
-  }
+		std::vector<std::shared_ptr<Session>>::iterator session = enabledSessions.begin();
+		for (; session != enabledSessions.end(); ++session)
+			(*session)->logon();
+	}
 
-  m_stop = true;
-  onStop();
-  if( m_threadid )
-    thread_join( m_threadid );
-  m_threadid = 0;
+	bool Acceptor::isLoggedOn()
+	{
+		Sessions sessions = m_sessions;
+		Sessions::iterator i = sessions.begin();
+		for (; i != sessions.end(); ++i)
+		{
+			if (i->second->isLoggedOn())
+				return true;
+		}
+		return false;
+	}
 
-  std::vector<std::shared_ptr<Session>>::iterator session = enabledSessions.begin();
-  for( ; session != enabledSessions.end(); ++session )
-    (*session)->logon();
-}
-
-bool Acceptor::isLoggedOn()
-{
-  Sessions sessions = m_sessions;
-  Sessions::iterator i = sessions.begin();
-  for ( ; i != sessions.end(); ++i )
-  {
-    if( i->second->isLoggedOn() )
-      return true;
-  }
-  return false;
-}
-
-THREAD_PROC Acceptor::startThread( void* p )
-{
-  Acceptor * pAcceptor = static_cast < Acceptor* > ( p );
-  pAcceptor->onStart();
-  return 0;
-}
+	THREAD_PROC Acceptor::startThread(void* p)
+	{
+		Acceptor * pAcceptor = static_cast <Acceptor*> (p);
+		pAcceptor->onStart();
+		return 0;
+	}
 }

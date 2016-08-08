@@ -39,7 +39,7 @@ class ThreadedSocketAcceptor : public Acceptor
 public:
   ThreadedSocketAcceptor( Application&, MessageStoreFactory&,LogFactory& ) throw( ConfigError );
 
-  virtual ~ThreadedSocketAcceptor();
+  ~ThreadedSocketAcceptor();
 
 private:
   struct AcceptorThreadInfo

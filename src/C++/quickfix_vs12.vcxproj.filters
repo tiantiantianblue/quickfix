@@ -1933,9 +1933,6 @@
     <ClInclude Include="Session.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="SessionFactory.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="SessionID.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -1972,6 +1969,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="KeyWord.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SessionFactory.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DataDictionaryPool.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2152,9 +2155,6 @@
     <ClCompile Include="Session.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="SessionFactory.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="SessionSettings.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -2172,6 +2172,12 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="PUGIXML_DOMDocument.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="DataDictionaryPool.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionFactory.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

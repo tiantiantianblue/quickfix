@@ -296,13 +296,6 @@ public:
           || i->second == TYPE::MultipleStringValue );
   }
 
-  void setCheckFieldsOutOfOrder( bool value )
-  { m_checkFieldsOutOfOrder = value; }
-  void setCheckFieldsHaveValues( bool value )
-  { m_checkFieldsHaveValues = value; }
-  void setCheckUserDefinedFields( bool value )
-  { m_checkUserDefinedFields = value; }
-
   /// Validate a message.
   static void validate( const Message& message,
                         const DataDictionary* const pSessionDD,
@@ -433,7 +426,7 @@ private:
   void checkHasValue( const FieldBase& field ) const
   throw( NoTagValue )
   {
-    if ( m_checkFieldsHaveValues && !field.getString().length() )
+    if ( m_checkFieldsHaveValues && field.getString().empty() )
       throw NoTagValue( field.getField() );
   }
 
