@@ -53,7 +53,7 @@ public:
   virtual ~SocketConnection();
 
   int getSocket() const { return m_socket; }
-  Session* getSession() const { return m_pSession; }
+  std::shared_ptr<Session> getSession() const { return m_pSession; }
 
   bool read( SocketConnector& s );
   bool read( SocketAcceptor&, SocketServer& );
@@ -93,7 +93,7 @@ private:
   Queue m_sendQueue;
   unsigned m_sendLength;
   Sessions m_sessions;
-  Session* m_pSession;
+  std::shared_ptr<Session> m_pSession;
   SocketMonitor* m_pMonitor;
   Mutex m_mutex;
   fd_set m_fds;

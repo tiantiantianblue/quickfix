@@ -627,6 +627,7 @@
     <ClInclude Include="HttpParser.h" />
     <ClInclude Include="HttpServer.h" />
     <ClInclude Include="Initiator.h" />
+    <ClInclude Include="KeyWord.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="MessageCracker.h" />

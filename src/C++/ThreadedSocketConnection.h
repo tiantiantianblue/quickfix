@@ -52,7 +52,7 @@ public:
                             Log* pLog );
   virtual ~ThreadedSocketConnection() ;
 
-  Session* getSession() const { return m_pSession; }
+  std::shared_ptr<Session> getSession() const { return m_pSession; }
   int getSocket() const { return m_socket; }
   bool connect();
   void disconnect();
@@ -73,7 +73,7 @@ private:
   Log* m_pLog;
   Parser m_parser;
   Sessions m_sessions;
-  Session* m_pSession;
+  std::shared_ptr<Session> m_pSession;
   bool m_disconnect;
   fd_set m_fds;
 };

@@ -132,7 +132,7 @@ void SocketInitiator::doConnect( const SessionID& s, const Dictionary& d )
   {
     std::string address;
     short port = 0;
-    Session* session = Session::lookupSession( s );
+    std::shared_ptr<Session> session = Session::lookupSession( s );
     if( !session->isSessionTime(UtcTimeStamp()) ) return;
 
     Log* log = session->getLog();
@@ -193,7 +193,7 @@ void SocketInitiator::onDisconnect( SocketConnector&, int s )
 
   setDisconnected( pSocketConnection->getSession()->getSessionID() );
 
-  Session* pSession = pSocketConnection->getSession();
+  std::shared_ptr<Session> pSession = pSocketConnection->getSession();
   if ( pSession )
   {
     pSession->disconnect();

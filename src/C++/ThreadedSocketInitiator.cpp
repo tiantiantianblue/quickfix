@@ -132,7 +132,7 @@ void ThreadedSocketInitiator::doConnect( const SessionID& s, const Dictionary& d
 {
   try
   {
-    Session* session = Session::lookupSession( s );
+    std::shared_ptr<Session> session = Session::lookupSession( s );
     if( !session->isSessionTime(UtcTimeStamp()) ) return;
 
     Log* log = session->getLog();
@@ -202,7 +202,7 @@ THREAD_PROC ThreadedSocketInitiator::socketThread( void* p )
   ThreadedSocketInitiator* pInitiator = pair->first;
   ThreadedSocketConnection* pConnection = pair->second;
   FIX::SessionID sessionID = pConnection->getSession()->getSessionID();
-  FIX::Session* pSession = FIX::Session::lookupSession( sessionID );
+  auto pSession = FIX::Session::lookupSession( sessionID );
   int socket = pConnection->getSocket();
   delete pair;
 

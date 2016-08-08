@@ -1971,6 +1971,9 @@
     <ClInclude Include="PUGIXML_DOMDocument.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="KeyWord.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Field">

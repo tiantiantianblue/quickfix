@@ -53,12 +53,8 @@ public:
   m_messageStoreFactory( messageStoreFactory ),
   m_pLogFactory( pLogFactory ) {}
 
-  ~SessionFactory();
-
-  Session* create( const SessionID& sessionID,
+  std::shared_ptr<Session> create( const SessionID& sessionID,
                    const Dictionary& settings ) throw( ConfigError );
-  void destroy( Session* pSession );
-
 private:
   typedef std::map < std::string, ptr::shared_ptr<DataDictionary> > Dictionaries;
 

@@ -69,10 +69,10 @@ public:
   /// Check to see if any sessions are currently logged on
   bool isLoggedOn();
 
-  Session* getSession( const SessionID& sessionID, Responder& );
+  std::shared_ptr<Session> getSession( const SessionID& sessionID, Responder& );
 
   const std::set<SessionID>& getSessions() const { return m_sessionIDs; }
-  Session* getSession( const SessionID& sessionID ) const;
+  std::shared_ptr<Session> getSession( const SessionID& sessionID );
   const Dictionary* const getSessionSettings( const SessionID& sessionID ) const;
 
   bool has( const SessionID& id )
@@ -121,7 +121,7 @@ private:
 
   typedef std::set < SessionID > SessionIDs;
   typedef std::map < SessionID, int > SessionState;
-  typedef std::map < SessionID, Session* > Sessions;
+  typedef std::map < SessionID, std::shared_ptr<Session> > Sessions;
 
   Sessions m_sessions;
   SessionIDs m_sessionIDs;

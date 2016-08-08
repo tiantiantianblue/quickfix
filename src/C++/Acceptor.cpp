@@ -51,34 +51,30 @@ throw( ConfigError )
 void Acceptor::initialize() throw ( ConfigError )
 {
   std::set < SessionID > sessions = SessionSettings::instance().getSessions();
-  std::set < SessionID > ::iterator i;
 
   SessionFactory factory( m_application, m_messageStoreFactory,
                           m_pLogFactory );
 
-  for ( i = sessions.begin(); i != sessions.end(); ++i )
+  for (const auto kv: SessionSettings::instance().getDictionaries())
   {
-    if (SessionSettings::instance().get( *i ).getString( CONNECTION_TYPE ) == "acceptor" )
+    if (kv.second.getString( CONNECTION_TYPE ) == "acceptor" )
     {
-      m_sessionIDs.insert( *i );
-      m_sessions[ *i ] = factory.create( *i, SessionSettings::instance().get( *i ) );
+      m_sessionIDs.insert( kv.first );
+      m_sessions[ kv.first ] = factory.create(kv.first, kv.second );
     }
   }
+
   if ( m_sessions.empty() )
     throw ConfigError( "No sessions defined for acceptor" );
 }
 
 Acceptor::~Acceptor()
 {
-  Sessions::iterator i;
-  for ( i = m_sessions.begin(); i != m_sessions.end(); ++i )
-    delete i->second;
-
   if( m_pLogFactory && m_pLog )
     m_pLogFactory->destroy( m_pLog );
 }
 
-Session* Acceptor::getSession
+std::shared_ptr<Session> Acceptor::getSession
 ( const std::string& msg, Responder& responder )
 {
   Message message;
@@ -112,13 +108,9 @@ Session* Acceptor::getSession
   return 0;
 }
 
-Session* Acceptor::getSession( const SessionID& sessionID ) const
+std::shared_ptr<Session> Acceptor::getSession( const SessionID& sessionID )
 {
-  Sessions::const_iterator i = m_sessions.find( sessionID );
-  if( i != m_sessions.end() )
-    return i->second;
-  else
-    return 0;
+  return m_sessions[sessionID];
 }
 
 const Dictionary* const Acceptor::getSessionSettings( const SessionID& sessionID ) const
@@ -150,13 +142,12 @@ void Acceptor::stop( bool force )
 
   HttpServer::stopGlobal();
 
-  std::vector<Session*> enabledSessions;
+  std::vector<std::shared_ptr<Session> > enabledSessions;
 
   Sessions sessions = m_sessions;
-  Sessions::iterator i = sessions.begin();
-  for ( ; i != sessions.end(); ++i )
+  for (Sessions::iterator i = sessions.begin(); i != sessions.end(); ++i )
   {
-    Session* pSession = Session::lookupSession(i->first);
+    auto pSession = Session::lookupSession(i->first);
     if( pSession && pSession->isEnabled() )
     {
       enabledSessions.push_back( pSession );
@@ -177,7 +168,7 @@ void Acceptor::stop( bool force )
     thread_join( m_threadid );
   m_threadid = 0;
 
-  std::vector<Session*>::iterator session = enabledSessions.begin();
+  std::vector<std::shared_ptr<Session>>::iterator session = enabledSessions.begin();
   for( ; session != enabledSessions.end(); ++session )
     (*session)->logon();
 }

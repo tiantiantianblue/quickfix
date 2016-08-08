@@ -73,7 +73,7 @@ public:
   DataDictionary( const DataDictionary& copy );
   DataDictionary( std::istream& stream ) throw( ConfigError );
   DataDictionary( const std::string& url ) throw( ConfigError );
-  virtual ~DataDictionary();
+  ~DataDictionary();
 
   void readFromURL( const std::string& url ) throw( ConfigError );
   void readFromDocument( DOMDocumentPtr pDoc ) throw( ConfigError );
@@ -296,11 +296,11 @@ public:
           || i->second == TYPE::MultipleStringValue );
   }
 
-  void checkFieldsOutOfOrder( bool value )
+  void setCheckFieldsOutOfOrder( bool value )
   { m_checkFieldsOutOfOrder = value; }
-  void checkFieldsHaveValues( bool value )
+  void setCheckFieldsHaveValues( bool value )
   { m_checkFieldsHaveValues = value; }
-  void checkUserDefinedFields( bool value )
+  void setCheckUserDefinedFields( bool value )
   { m_checkUserDefinedFields = value; }
 
   /// Validate a message.
@@ -516,6 +516,7 @@ private:
   bool m_checkFieldsOutOfOrder{true};
   bool m_checkFieldsHaveValues{true};
   bool m_checkUserDefinedFields{true};
+
   BeginString m_beginString;
   MsgTypeToField m_messageFields;
   MsgTypeToField m_requiredFields;

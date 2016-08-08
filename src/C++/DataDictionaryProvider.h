@@ -43,7 +43,6 @@ class DataDictionaryProvider
 {
 public:
   DataDictionaryProvider() {}
-  DataDictionaryProvider( const DataDictionaryProvider& copy );
 
   const DataDictionary& getSessionDataDictionary(const BeginString& beginString) const
   throw( DataDictionaryNotFound );

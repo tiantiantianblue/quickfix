@@ -86,7 +86,7 @@ public:
         ApplVerID applVerID;
         if(!message.getHeader().getFieldIfSet(applVerID))
         {
-          Session* pSession = Session::lookupSession( sessionID );
+          std::shared_ptr<Session> pSession = Session::lookupSession( sessionID );
           applVerID = pSession->getSenderDefaultApplVerID();
         }
 
@@ -151,7 +151,7 @@ public:
         ApplVerID applVerID;
         if(!message.getHeader().getFieldIfSet(applVerID))
         {
-          Session* pSession = Session::lookupSession( sessionID );
+          std::shared_ptr<Session> pSession = Session::lookupSession( sessionID );
           applVerID = pSession->getSenderDefaultApplVerID();
         }
 

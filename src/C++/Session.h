@@ -50,7 +50,7 @@ public:
            const DataDictionaryProvider&,
            const TimeRange&,
            int heartBtInt, LogFactory* pLogFactory );
-  virtual ~Session();
+   ~Session();
 
   void logon() 
   { m_state.enabled( true ); m_state.logoutReason( "" ); }
@@ -97,10 +97,10 @@ public:
 
   static std::set<SessionID> getSessions();
   static bool doesSessionExist( const SessionID& );
-  static Session* lookupSession( const SessionID& );
-  static Session* lookupSession( const std::string&, bool reverse = false );
+  static std::shared_ptr<Session> lookupSession( const SessionID& );
+  static std::shared_ptr<Session> lookupSession( const std::string&, bool reverse = false );
   static bool isSessionRegistered( const SessionID& );
-  static Session* registerSession( const SessionID& );
+  static std::shared_ptr<Session> registerSession( const SessionID& );
   static void unregisterSession( const SessionID& );
 
   static size_t numSessions();
@@ -215,7 +215,7 @@ public:
   const MessageStore* getStore() { return &m_state; }
 
 private:
-  typedef std::map < SessionID, Session* > Sessions;
+  typedef std::map < SessionID, std::shared_ptr<Session> > Sessions;
   typedef std::set < SessionID > SessionIDs;
 
   static bool addSession( Session& );

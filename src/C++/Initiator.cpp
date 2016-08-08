@@ -83,33 +83,20 @@ void Initiator::initialize() throw ( ConfigError )
 
 Initiator::~Initiator()
 {
-  Sessions::iterator i;
-  for ( i = m_sessions.begin(); i != m_sessions.end(); ++i )
-    delete i->second;
-
   if( m_pLogFactory && m_pLog )
     m_pLogFactory->destroy( m_pLog );
 }
 
-Session* Initiator::getSession( const SessionID& sessionID,
+std::shared_ptr<Session>  Initiator::getSession( const SessionID& sessionID,
                                 Responder& responder )
 {
-  Sessions::iterator i = m_sessions.find( sessionID );
-  if ( i != m_sessions.end() )
-  {
-    i->second->setResponder( &responder );
-    return i->second;
-  }
-  return 0;
+  m_sessions[sessionID]->setResponder(&responder);
+  return m_sessions[sessionID];
 }
 
-Session* Initiator::getSession( const SessionID& sessionID ) const
+std::shared_ptr<Session> Initiator::getSession( const SessionID& sessionID )
 {
-  Sessions::const_iterator i = m_sessions.find( sessionID );
-  if( i != m_sessions.end() )
-    return i->second;
-  else
-    return 0;
+  return m_sessions[sessionID];
 }
 
 const Dictionary* const Initiator::getSessionSettings( const SessionID& sessionID ) const
@@ -132,7 +119,7 @@ void Initiator::connect()
   SessionIDs::iterator i = disconnected.begin();
   for ( ; i != disconnected.end(); ++i )
   {
-    Session* pSession = Session::lookupSession( *i );
+    std::shared_ptr<Session> pSession = Session::lookupSession( *i );
     if ( pSession->isEnabled() && pSession->isSessionTime(UtcTimeStamp()) )
       doConnect( *i, SessionSettings::instance().get( *i ));
   }
@@ -225,13 +212,13 @@ void Initiator::stop( bool force )
 
   HttpServer::stopGlobal();
 
-  std::vector<Session*> enabledSessions;
+  std::vector<std::shared_ptr<Session>> enabledSessions;
 
   SessionIDs connected = m_connected;
   SessionIDs::iterator i = connected.begin();
   for ( ; i != connected.end(); ++i )
   {
-    Session* pSession = Session::lookupSession(*i);
+    std::shared_ptr<Session> pSession = Session::lookupSession(*i);
     if( pSession && pSession->isEnabled() )
     {
       enabledSessions.push_back( pSession );
@@ -257,7 +244,7 @@ void Initiator::stop( bool force )
     thread_join( m_threadid );
   m_threadid = 0;
 
-  std::vector<Session*>::iterator session = enabledSessions.begin();
+  std::vector<std::shared_ptr<Session>>::iterator session = enabledSessions.begin();
   for( ; session != enabledSessions.end(); ++session )
     (*session)->logon();
 }

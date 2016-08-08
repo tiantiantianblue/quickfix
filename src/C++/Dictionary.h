@@ -29,6 +29,7 @@
 #include <map>
 #include <string>
 #include "Exceptions.h"
+#include"KeyWord.h"
 
 namespace FIX
 {
@@ -36,13 +37,10 @@ namespace FIX
 class Dictionary
 {
 public:
-  Dictionary( const std::string& name ) : m_name( name ) {}
-  Dictionary() {}
-  virtual ~Dictionary() {}
+  Dictionary( const std::string& name="" ) : m_name( name ) {}
 
-  typedef std::map < std::string, std::string > Data;
-  typedef Data::const_iterator iterator;
-  typedef iterator const_iterator;
+  using Data= std::map < std::string, std::string >;
+  using  const_iterator= Data::const_iterator;
 
   /// Get the name of the dictionary.
   std::string getName() const { return m_name; }
@@ -68,12 +66,6 @@ public:
   /// Set a value from a string.
   void setString( const std::string&, const std::string& );
   /// Set a value from a int.
-  void setInt( const std::string&, int );
-  /// Set a value from a double.
-  void setDouble( const std::string&, double );
-  /// Set a value from a bool
-  void setBool( const std::string&, bool );
-  /// Set a value from a day
   void setDay( const std::string&, int );
 
   /// Check if the dictionary contains a value for key.
@@ -81,11 +73,18 @@ public:
   /// Merge two dictionaries.
   void merge( const Dictionary& );
 
-  iterator begin() const { return m_data.begin(); }
-  iterator end() const { return m_data.end(); }
+  const_iterator begin() const { return m_data.begin(); }
+  const_iterator end() const { return m_data.end(); }
 
 private:
-  Data m_data;
+	Data m_data
+	{ 
+		{ USE_DATA_DICTIONARY,"Y"},
+		{ USE_LOCAL_TIME ,"N"},
+		{ START_DAY ,"-1"},
+		{ END_DAY ,"-1"},
+		{ HEARTBTINT , "0"}
+	};
   std::string m_name;
 };
 /*! @} */

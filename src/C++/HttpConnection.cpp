@@ -207,7 +207,7 @@ void HttpConnection::processRoot
   std::set<SessionID>::iterator i;
   for( i = sessions.begin(); i != sessions.end(); ++i )
   {
-    Session* pSession = Session::lookupSession( *i );
+    std::shared_ptr<Session> pSession = Session::lookupSession( *i );
     if( !pSession ) continue;
 
     { TR tr(b); tr.text();
@@ -433,7 +433,7 @@ void HttpConnection::processSession
       sessionQualifier = copy.getParameter( "SessionQualifier" );
 
     SessionID sessionID( beginString, senderCompID, targetCompID, sessionQualifier );
-    Session* pSession = Session::lookupSession( sessionID );
+    std::shared_ptr<Session> pSession = Session::lookupSession( sessionID );
     if( pSession == 0 ) throw SessionNotFound();
 
     if( copy.hasParameter("Enabled") )
@@ -569,7 +569,7 @@ void HttpConnection::processResetSession
       sessionQualifier = copy.getParameter( "SessionQualifier" );
 
     SessionID sessionID( beginString, senderCompID, targetCompID, sessionQualifier );
-    Session* pSession = Session::lookupSession( sessionID );
+    std::shared_ptr<Session> pSession = Session::lookupSession( sessionID );
     if( pSession == 0 ) throw SessionNotFound();
 
     std::string sessionUrl = "/session" + request.getParameterString();
@@ -627,7 +627,7 @@ void HttpConnection::processRefreshSession
     sessionQualifier = copy.getParameter( "SessionQualifier" );
 
     SessionID sessionID( beginString, senderCompID, targetCompID, sessionQualifier );
-    Session* pSession = Session::lookupSession( sessionID );
+    std::shared_ptr<Session> pSession = Session::lookupSession( sessionID );
     if( pSession == 0 ) throw SessionNotFound();
 
     std::string sessionUrl = "/session" + request.getParameterString();

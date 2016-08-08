@@ -64,18 +64,14 @@ Session::Session( Application& application,
   m_dataDictionaryProvider( dataDictionaryProvider ),
   m_messageStoreFactory( messageStoreFactory ),
   m_pLogFactory( pLogFactory ),
-  m_pResponder( 0 )
+  m_pResponder( nullptr )
 {
   m_state.heartBtInt( heartBtInt );
   m_state.initiate( heartBtInt != 0 );
   m_state.store( m_messageStoreFactory.create( m_sessionID ) );
   if ( m_pLogFactory )
     m_state.log( m_pLogFactory->create( m_sessionID ) );
-  //get abort();
-  //if( !checkSessionTime(UtcTimeStamp()) )
-  //reset();
   addSession( *this );
-  //not here abort();
   m_application.onCreate( m_sessionID );
   m_state.onEvent( "Created session" );
 }
@@ -1363,7 +1359,7 @@ bool Session::sendToTarget( Message& message, const SessionID& sessionID )
 throw( SessionNotFound )
 {
   message.setSessionID( sessionID );
-  Session* pSession = lookupSession( sessionID );
+  std::shared_ptr<Session> pSession = lookupSession( sessionID );
   if ( !pSession ) throw SessionNotFound();
   return pSession->send( message );
 }
@@ -1400,21 +1396,17 @@ bool Session::doesSessionExist( const SessionID& sessionID )
   return s_sessions.end() != s_sessions.find( sessionID );
 }
 
-Session* Session::lookupSession( const SessionID& sessionID )
+std::shared_ptr<Session> Session::lookupSession( const SessionID& sessionID )
 {
   Locker locker( s_mutex );
-  Sessions::iterator find = s_sessions.find( sessionID );
-  if ( find != s_sessions.end() )
-    return find->second;
-  else
-    return 0;
+  return  s_sessions[sessionID ];
 }
 
-Session* Session::lookupSession( const std::string& string, bool reverse )
+std::shared_ptr<Session> Session::lookupSession( const std::string& str, bool reverse )
 {
   Message message;
-  if ( !message.setStringHeader( string ) )
-    return 0;
+  if ( !message.setStringHeader( str ) )
+    return nullptr;
 
   try
   {
@@ -1441,10 +1433,10 @@ bool Session::isSessionRegistered( const SessionID& sessionID )
   return s_registered.end() != s_registered.find( sessionID );
 }
 
-Session* Session::registerSession( const SessionID& sessionID )
+std::shared_ptr<Session> Session::registerSession( const SessionID& sessionID )
 {
   Locker locker( s_mutex );
-  Session* pSession = lookupSession( sessionID );
+  std::shared_ptr<Session> pSession = lookupSession( sessionID );
   if ( pSession == 0 ) return 0;
   if ( isSessionRegistered( sessionID ) ) return 0;
   s_registered[ sessionID ] = pSession;
@@ -1469,7 +1461,7 @@ bool Session::addSession( Session& s )
   Sessions::iterator it = s_sessions.find( s.m_sessionID );
   if ( it == s_sessions.end() )
   {
-    s_sessions[ s.m_sessionID ] = &s;
+    s_sessions[ s.m_sessionID ] = std::shared_ptr<Session>(&s);
     s_sessionIDs.insert( s.m_sessionID );
     return true;
   }

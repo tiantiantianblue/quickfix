@@ -60,9 +60,8 @@ namespace FIX
 			def = section[0];
 		s.setDeault(def);
 
-		section = settings.get("SESSION");
 
-		for (const auto sec: section)
+		for (const auto sec: settings.get("SESSION"))
 		{
 			Dictionary dict = sec;
 			dict.merge(def);
@@ -82,7 +81,7 @@ namespace FIX
 		if (defaults.size())
 		{
 			stream << "[DEFAULT]" << std::endl;
-			Dictionary::iterator i;
+			Dictionary::const_iterator i;
 			for (i = defaults.begin(); i != defaults.end(); ++i)
 				stream << i->first << "=" << i->second << std::endl;
 			stream << std::endl;
@@ -96,7 +95,7 @@ namespace FIX
 			const Dictionary& section = s.get(*i);
 			if (!section.size()) continue;
 
-			Dictionary::iterator i;
+			Dictionary::const_iterator i;
 			for (i = section.begin(); i != section.end(); ++i)
 			{
 				if (defaults.has(i->first) && defaults.getString(i->first) == i->second)
@@ -114,6 +113,10 @@ namespace FIX
 		return m_settings.find(sessionID) != m_settings.end();
 	}
 
+	const SessionSettings::Dictionaries& SessionSettings::getDictionaries() const
+	{
+		return m_settings;
+	}
 	const Dictionary& SessionSettings::get(const SessionID& sessionID) const
 		throw(ConfigError)
 	{

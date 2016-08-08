@@ -29,11 +29,6 @@
 
 namespace FIX
 {
-DataDictionaryProvider::DataDictionaryProvider( const DataDictionaryProvider& copy )
-{
-  *this = copy;
-}
-
 const DataDictionary& DataDictionaryProvider::getSessionDataDictionary
 (const BeginString& beginString) const throw( DataDictionaryNotFound )
 {
