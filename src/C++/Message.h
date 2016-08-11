@@ -348,7 +348,7 @@ namespace FIX
 			const DataDictionary* pAppDD)
 		{
 			if ((pSessionDD && pSessionDD->isDataField(field)) ||
-				(pAppDD && pAppDD != pSessionDD && pAppDD->isDataField(field)))
+				(pAppDD && pAppDD->isDataField(field)))
 			{
 				return true;
 			}

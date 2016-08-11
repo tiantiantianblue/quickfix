@@ -112,10 +112,6 @@ namespace FIX
 		static bool doesSessionExist(const SessionID&);
 		static std::shared_ptr<Session> lookupSession(const SessionID&);
 		static std::shared_ptr<Session> lookupSession(const std::string&, bool reverse = false);
-		static bool isSessionRegistered(const SessionID&);
-		static std::shared_ptr<Session> registerSession(const SessionID&);
-		static void unregisterSession(const SessionID&);
-
 		static size_t numSessions();
 
 		bool isSessionTime(const UtcTimeStamp& time)
@@ -414,7 +410,6 @@ namespace FIX
 
 		static Sessions s_sessions;
 		static SessionIDs s_sessionIDs;
-		static Sessions s_registered;
 		static Mutex s_mutex;
 
 		const DataDictionary& m_sessionDataDictionary;

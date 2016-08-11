@@ -108,7 +108,7 @@ namespace FIX
 		return *this;
 	}
 
-	void DataDictionary::validate(const Message& message,
+	void DataDictionary::validateMessage(const Message& message,
 		const DataDictionary* const pSessionDD,
 		const DataDictionary* const pAppDD)
 		throw(FIX::Exception)

@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Acceptor.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="fix40\Advertisement.h">
       <Filter>Message\Headers\fix40</Filter>
     </ClInclude>
@@ -1807,9 +1804,6 @@
     <ClInclude Include="MessageSorters.h">
       <Filter>Message\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="SocketAcceptor.h">
-      <Filter>Socket\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="SocketConnection.h">
       <Filter>Socket\Headers</Filter>
     </ClInclude>
@@ -2071,9 +2065,6 @@
     <ClCompile Include="MessageSorters.cpp">
       <Filter>Message\Source</Filter>
     </ClCompile>
-    <ClCompile Include="SocketConnection.cpp">
-      <Filter>Socket\Source</Filter>
-    </ClCompile>
     <ClCompile Include="SocketConnector.cpp">
       <Filter>Socket\Source</Filter>
     </ClCompile>
@@ -2139,9 +2130,6 @@
     </ClCompile>
     <ClCompile Include="PostgreSQLStore.cpp">
       <Filter>Storage\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Acceptor.cpp">
-      <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Dictionary.cpp">
       <Filter>Source</Filter>

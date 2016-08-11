@@ -26,203 +26,223 @@
 #include "ThreadedSocketAcceptor.h"
 #include "Settings.h"
 #include "Utility.h"
+#include "Session.h"
+#include "HttpServer.h"
+#include "SessionFactory.h"
+#include <algorithm>
+#include <fstream>
 
 namespace FIX
 {
-ThreadedSocketAcceptor::ThreadedSocketAcceptor(
-  Application& application,
-  MessageStoreFactory& factory,
-  LogFactory& logFactory ) throw( ConfigError )
-: Acceptor( application, factory,  logFactory )
-{ 
-  socket_init(); 
-}
+	ThreadedSocketAcceptor::ThreadedSocketAcceptor(
+		Application& application,
+		MessageStoreFactory& factory,
+		LogFactory& logFactory) throw(ConfigError)
+		:m_application(application),
+		m_messageStoreFactory(factory),
+		m_pLogFactory(&logFactory),
+		m_pLog(logFactory.create())
+	{
+		initialize();
+		socket_init();
+	}
 
-ThreadedSocketAcceptor::~ThreadedSocketAcceptor()
-{ 
-  socket_term(); 
-}
+	ThreadedSocketAcceptor::~ThreadedSocketAcceptor()
+	{
+		socket_term();
+		if (m_pLogFactory && m_pLog)
+			m_pLogFactory->destroy(m_pLog);
+	}
 
-void ThreadedSocketAcceptor::onInitialize()
-throw ( RuntimeError )
-{
-  short port = 0;
-  std::set<int> ports;
+	void ThreadedSocketAcceptor::initialize() throw (ConfigError)
+	{
+		SessionFactory factory(m_application, m_messageStoreFactory, m_pLogFactory);
+		for (const auto& kv : SessionSettings::instance().getDictionaries())
+		{
+			if (kv.second.getString(CONNECTION_TYPE) == "acceptor")
+			{
+				m_sessionIDs.insert(kv.first);
+				m_sessions[kv.first] = factory.create(kv.first, kv.second);
+			}
+		}
+		if (m_sessions.empty())
+			throw ConfigError("No sessions defined for acceptor");
 
-  std::set<SessionID> sessions = SessionSettings::instance().getSessions();
-  std::set<SessionID>::iterator i = sessions.begin();
-  for( ; i != sessions.end(); ++i )
-  {
-    const Dictionary& settings = SessionSettings::instance().get( *i );
-    port = (short)settings.getInt( SOCKET_ACCEPT_PORT );
+		auto settings = SessionSettings::instance().get();
 
-    m_portToSessions[port].insert( *i );
+		m_port = settings.getInt(SOCKET_ACCEPT_PORT);
+		if (settings.has(SOCKET_NODELAY))
+			m_SOCKET_NODELAY = settings.getBool(SOCKET_NODELAY);
 
-    if( ports.find(port) != ports.end() )
-      continue;
-    ports.insert( port );
+		if (settings.has(SOCKET_SEND_BUFFER_SIZE))
+			m_SOCKET_SEND_BUFFER_SIZE = settings.getInt(SOCKET_SEND_BUFFER_SIZE);
 
-    const bool reuseAddress = settings.has( SOCKET_REUSE_ADDRESS ) ? 
-      settings.getBool( SOCKET_REUSE_ADDRESS ) : true;
+		if (settings.has(SOCKET_RECEIVE_BUFFER_SIZE))
+			m_SOCKET_RECEIVE_BUFFER_SIZE = settings.getInt(SOCKET_RECEIVE_BUFFER_SIZE);
+	}
 
-    const bool noDelay = settings.has( SOCKET_NODELAY ) ? 
-      settings.getBool( SOCKET_NODELAY ) : false;
+	void ThreadedSocketAcceptor::start() throw (ConfigError, RuntimeError)
+	{
+		m_stop = false;
 
-    const int sendBufSize = settings.has( SOCKET_SEND_BUFFER_SIZE ) ?
-      settings.getInt( SOCKET_SEND_BUFFER_SIZE ) : 0;
+		m_socket = socket_createAcceptor(m_port, SessionSettings::instance().get().has(SOCKET_REUSE_ADDRESS) ?
+			SessionSettings::instance().get().getBool(SOCKET_REUSE_ADDRESS) : true);
 
-    const int rcvBufSize = settings.has( SOCKET_RECEIVE_BUFFER_SIZE ) ?
-      settings.getInt( SOCKET_RECEIVE_BUFFER_SIZE ) : 0;
-    int socket = socket_createAcceptor( port, reuseAddress );
-    if( socket < 0 )
-    {
-      SocketException e;
-      socket_close( socket );
-      throw RuntimeError( "Unable to create, bind, or listen to port " 
-                         + IntConvertor::convert( (unsigned short)port ) + " (" + e.what() + ")" );
-    }
-    if( noDelay )
-      socket_setsockopt( socket, TCP_NODELAY );
-    if( sendBufSize )
-      socket_setsockopt( socket, SO_SNDBUF, sendBufSize );
-    if( rcvBufSize )
-      socket_setsockopt( socket, SO_RCVBUF, rcvBufSize );
+		if (m_socket < 0)
+		{
+			socket_close(m_socket);
+			throw RuntimeError("Unable to create, bind, or listen to port ");
+		}
 
-    m_socketToPort[socket] = port;
-    m_sockets.insert( socket );
-  }    
-}
+		HttpServer::startGlobal();
+		if (!thread_spawn(&startThread, this, m_threadid))
+			throw RuntimeError("Unable to spawn thread");
+	}
 
-void ThreadedSocketAcceptor::onStart()
-{
-  Sockets::iterator i;
-  for( i = m_sockets.begin(); i != m_sockets.end(); ++i )
-  {
-    Locker l( m_mutex );
-    int port = m_socketToPort[*i];
-    AcceptorThreadInfo* info = new AcceptorThreadInfo( this, *i, port );
-    thread_id thread;
-    thread_spawn( &socketAcceptorThread, info, thread );
-    addThread( *i, thread );
-  }
-}
+	void ThreadedSocketAcceptor::stop(bool force)
+	{
+		if (isStopped()) 
+			return;
+		HttpServer::stopGlobal();
+		std::vector<std::shared_ptr<Session> > enabledSessions;
 
-void ThreadedSocketAcceptor::onStop()
-{ 
-  SocketToThread threads;
-  SocketToThread::iterator i;
+		Sessions sessions = m_sessions;
+		for (Sessions::iterator i = sessions.begin(); i != sessions.end(); ++i)
+		{
+			auto pSession = Session::lookupSession(i->first);
+			if (pSession && pSession->isEnabled())
+			{
+				enabledSessions.push_back(pSession);
+				pSession->logout();
+			}
+		}
 
-  {
-    Locker l(m_mutex);
+		if (!force)
+		{
+			for (int second = 1; second <= 10 && isLoggedOn(); ++second)
+				process_sleep(1);
+		}
 
-    time_t start = 0;
-    time_t now = 0;
+		m_stop = true;
+		onStop();
+		if (m_threadid)
+			thread_join(m_threadid);
+		m_threadid = 0;
 
-    ::time( &start );
-    while ( isLoggedOn() )
-    {
-      if( ::time(&now) -5 >= start )
-        break;
-    }
+		std::vector<std::shared_ptr<Session>>::iterator session = enabledSessions.begin();
+		for (; session != enabledSessions.end(); ++session)
+			(*session)->logon();
+	}
 
-    threads = m_threads;
-    m_threads.clear();
-  }
+	bool ThreadedSocketAcceptor::isLoggedOn()
+	{
+		Sessions sessions = m_sessions;
+		Sessions::iterator i = sessions.begin();
+		for (; i != sessions.end(); ++i)
+		{
+			if (i->second->isLoggedOn())
+				return true;
+		}
+		return false;
+	}
 
-  for ( i = threads.begin(); i != threads.end(); ++i )
-    socket_close( i->first );
-  for ( i = threads.begin(); i != threads.end(); ++i )
-    thread_join( i->second );
-}
+	THREAD_PROC ThreadedSocketAcceptor::startThread(void* p)
+	{
+		ThreadedSocketAcceptor * pAcceptor = static_cast <ThreadedSocketAcceptor*> (p);
+		pAcceptor->socketAccept();
+		return 0;
+	}
 
-void ThreadedSocketAcceptor::addThread( int s, thread_id t )
-{
-  Locker l(m_mutex);
 
-  m_threads[ s ] = t;
-}
+	void ThreadedSocketAcceptor::onStop()
+	{
+		std::map < int, thread_id > threads;
 
-void ThreadedSocketAcceptor::removeThread( int s )
-{
-  Locker l(m_mutex);
-  SocketToThread::iterator i = m_threads.find( s );
-  if ( i != m_threads.end() )
-  {
-    thread_detach( i->second );
-    m_threads.erase( i );
-  }
-}
+		{
+			Locker l(m_mutex);
 
-THREAD_PROC ThreadedSocketAcceptor::socketAcceptorThread( void* p )
-{
-  AcceptorThreadInfo * info = reinterpret_cast < AcceptorThreadInfo* > ( p );
+			time_t start = 0;
+			time_t now = 0;
 
-  ThreadedSocketAcceptor* pAcceptor = info->m_pAcceptor;
-  int s = info->m_socket;
-  int port = info->m_port;
-  delete info;
+			time(&start);
+			while (isLoggedOn())
+			{
+				if (time(&now) - 5 >= start)
+					break;
+			}
 
-  int noDelay = 0;
-  int sendBufSize = 0;
-  int rcvBufSize = 0;
-  socket_getsockopt( s, TCP_NODELAY, noDelay );
-  socket_getsockopt( s, SO_SNDBUF, sendBufSize );
-  socket_getsockopt( s, SO_RCVBUF, rcvBufSize );
+			threads = m_threads;
+			m_threads.clear();
+		}
 
-  int socket = 0;
-  while ( ( !pAcceptor->isStopped() && ( socket = socket_accept( s ) ) >= 0 ) )
-  {
-    if( noDelay )
-      socket_setsockopt( socket, TCP_NODELAY );
-    if( sendBufSize )
-      socket_setsockopt( socket, SO_SNDBUF, sendBufSize );
-    if( rcvBufSize )
-      socket_setsockopt( socket, SO_RCVBUF, rcvBufSize );
+		for (auto i = threads.begin(); i != threads.end(); ++i)
+			socket_close(i->first);
+		for (auto i = threads.begin(); i != threads.end(); ++i)
+			thread_join(i->second);
+	}
 
-    Sessions sessions = pAcceptor->m_portToSessions[port];
+	void ThreadedSocketAcceptor::addThread(int s, thread_id t)
+	{
+		Locker l(m_mutex);
+		m_threads[s] = t;
+	}
 
-    ThreadedSocketConnection * pConnection =
-      new ThreadedSocketConnection
-        ( socket, sessions, pAcceptor->getLog() );
+	void ThreadedSocketAcceptor::removeThread(int s)
+	{
+		Locker l(m_mutex);
+		auto i = m_threads.find(s);
+		if (i != m_threads.end())
+		{
+			thread_detach(i->second);
+			m_threads.erase(i);
+		}
+	}
 
-    ConnectionThreadInfo* info = new ConnectionThreadInfo( pAcceptor, pConnection );
+	void ThreadedSocketAcceptor::socketAccept()
+	{
+		int socket = 0;
+		while ((!isStopped() && (socket = socket_accept(m_socket)) >= 0))
+		{
+			if (m_SOCKET_NODELAY)
+				socket_setsockopt(socket, TCP_NODELAY);
+			if (m_SOCKET_SEND_BUFFER_SIZE)
+				socket_setsockopt(socket, SO_SNDBUF, m_SOCKET_SEND_BUFFER_SIZE);
+			if (m_SOCKET_RECEIVE_BUFFER_SIZE)
+				socket_setsockopt(socket, SO_RCVBUF, m_SOCKET_RECEIVE_BUFFER_SIZE);
 
-    {
-      Locker l( pAcceptor->m_mutex );
+			ThreadedSocketConnection * pConnection =
+				new ThreadedSocketConnection(socket, m_pLog);
 
-      std::stringstream stream;
-      stream << "Accepted connection from " << socket_peername( socket ) << " on port " << port;
+			ConnectionThreadInfo* info = new ConnectionThreadInfo(this, pConnection);
 
-      if( pAcceptor->getLog() )
-        pAcceptor->getLog()->onEvent( stream.str() );
+			{
+				Locker l(m_mutex);
+				m_pLog->onEvent(std::string("Accepted connection from ")+
+					socket_peername(socket)+ " on port " + std::to_string(m_port));
 
-      thread_id thread;
-      if ( !thread_spawn( &socketConnectionThread, info, thread ) )
-        delete info;
-      pAcceptor->addThread( socket, thread );
-    }
-  }
+				thread_id thread;
+				if (!thread_spawn(&socketConnectionThread, info, thread))
+					delete info;
+				addThread(socket, thread);
+			}
+		}
 
-  if( !pAcceptor->isStopped() )
-    pAcceptor->removeThread( s );
+		if (!isStopped())
+			removeThread(m_socket);
+	}
 
-  return 0;
-}
+	THREAD_PROC ThreadedSocketAcceptor::socketConnectionThread(void* p)
+	{
+		ConnectionThreadInfo * info = static_cast <ConnectionThreadInfo*> (p);
 
-THREAD_PROC ThreadedSocketAcceptor::socketConnectionThread( void* p )
-{
-  ConnectionThreadInfo * info = reinterpret_cast < ConnectionThreadInfo* > ( p );
+		ThreadedSocketAcceptor* pAcceptor = info->m_pAcceptor;
+		ThreadedSocketConnection* pConnection = info->m_pConnection;
+		delete info;
 
-  ThreadedSocketAcceptor* pAcceptor = info->m_pAcceptor;
-  ThreadedSocketConnection* pConnection = info->m_pConnection;
-  delete info;
-
-  int socket = pConnection->getSocket();
-
-  while ( pConnection->read() ) {}
-  delete pConnection;
-  if( !pAcceptor->isStopped() )
-    pAcceptor->removeThread( socket );
-  return 0;
-}
+		while (pConnection->read()) {}
+		delete pConnection;
+		if (!pAcceptor->isStopped())
+			pAcceptor->removeThread(pConnection->getSocket());
+		return 0;
+	}
 }

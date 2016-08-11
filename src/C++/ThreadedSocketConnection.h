@@ -46,7 +46,7 @@ class ThreadedSocketConnection : Responder
 public:
   typedef std::set<SessionID> Sessions;
 
-  ThreadedSocketConnection( int s, Sessions sessions, Log* pLog );
+  ThreadedSocketConnection( int s, Log* pLog );
   ThreadedSocketConnection( const SessionID&, int s, 
                             const std::string& address, short port, 
                             Log* pLog );

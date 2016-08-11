@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="..\config_windows.h" />
     <ClInclude Include="..\stdafx.h" />
-    <ClInclude Include="Acceptor.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="AtomicCount.h" />
     <ClInclude Include="DatabaseConnectionID.h" />
@@ -658,7 +657,6 @@
     <ClInclude Include="SessionState.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SharedArray.h" />
-    <ClInclude Include="SocketAcceptor.h" />
     <ClInclude Include="SocketConnection.h" />
     <ClInclude Include="SocketConnector.h" />
     <ClInclude Include="SocketInitiator.h" />
@@ -673,7 +671,6 @@
     <ClInclude Include="Values.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Acceptor.cpp" />
     <ClCompile Include="DataDictionary.cpp" />
     <ClCompile Include="DataDictionaryPool.cpp" />
     <ClCompile Include="DataDictionaryProvider.cpp" />
@@ -706,7 +703,6 @@
     <ClCompile Include="SessionFactory.cpp" />
     <ClCompile Include="SessionSettings.cpp" />
     <ClCompile Include="Settings.cpp" />
-    <ClCompile Include="SocketConnection.cpp" />
     <ClCompile Include="SocketConnector.cpp" />
     <ClCompile Include="SocketInitiator.cpp" />
     <ClCompile Include="SocketMonitor.cpp" />
@@ -830,8 +826,10 @@ del /F EXCLUDE
 echo stdafx.h &gt;&gt; EXCLUDE
 echo release\ &gt;&gt; EXCLUDE
 echo debug\ &gt;&gt; EXCLUDE
-xcopy *.h /S/Y/E/I /EXCLUDE:EXCLUDE ..\..\include\quickfix
+xcopy *.h  /S/Y/E/I /EXCLUDE:EXCLUDE ..\..\include\quickfix
+xcopy *.hpp  /S/Y/E/I /EXCLUDE:EXCLUDE ..\..\include\quickfix
 del /F EXCLUDE
+
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

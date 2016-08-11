@@ -62,7 +62,6 @@ private:
   Application& m_application;
   MessageStoreFactory& m_messageStoreFactory;
   LogFactory* m_pLogFactory;
-  Dictionaries m_dictionaries;
 };
 }
 

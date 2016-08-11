@@ -26,68 +26,93 @@
 #pragma warning( disable : 4503 4355 4786 4290 )
 #endif
 
-#include "Acceptor.h"
 #include "ThreadedSocketConnection.h"
 #include "Mutex.h"
-
+#include "Application.h"
+#include "MessageStore.h"
+#include "Log.h"
+#include "Responder.h"
+#include "SessionSettings.h"
+#include "Exceptions.h"
+#include <map>
+#include <string>
 namespace FIX
 {
-/// Threaded Socket implementation of Acceptor.
-class ThreadedSocketAcceptor : public Acceptor
-{
-  friend class SocketConnection;
-public:
-  ThreadedSocketAcceptor( Application&, MessageStoreFactory&,LogFactory& ) throw( ConfigError );
+	/// Threaded Socket implementation of Acceptor.
+	class ThreadedSocketAcceptor
+	{
+		friend class SocketConnection;
+	public:
+		ThreadedSocketAcceptor(
+			Application& application,
+			MessageStoreFactory& factory,
+			LogFactory& logFactory) throw(ConfigError);
 
-  ~ThreadedSocketAcceptor();
+		~ThreadedSocketAcceptor();
 
-private:
-  struct AcceptorThreadInfo
-  {
-    AcceptorThreadInfo( ThreadedSocketAcceptor* pAcceptor, int socket, int port )
-    : m_pAcceptor( pAcceptor ), m_socket( socket ), m_port( port ) {}
+		/// Start acceptor.
+		void start() throw (ConfigError, RuntimeError);
 
-    ThreadedSocketAcceptor* m_pAcceptor;
-    int m_socket;
-    int m_port;
-  };
+		/// Stop acceptor.
+		void stop(bool force = false);
 
-  struct ConnectionThreadInfo
-  {
-    ConnectionThreadInfo( ThreadedSocketAcceptor* pAcceptor, 
-                          ThreadedSocketConnection* pConnection )
-    : m_pAcceptor( pAcceptor ), m_pConnection( pConnection ) {}
+		/// Check to see if any sessions are currently logged on
+		bool isLoggedOn();
 
-    ThreadedSocketAcceptor* m_pAcceptor;
-    ThreadedSocketConnection* m_pConnection;
-  };
+		bool has(const SessionID& id)
+		{
+			return m_sessions.find(id) != m_sessions.end();
+		}
 
-  bool readSettings( const SessionSettings& );
+		bool isStopped() { return m_stop; }
 
-  typedef std::set < int >  Sockets;
-  typedef std::set < SessionID > Sessions;
-  typedef std::map < int, Sessions > PortToSessions;
-  typedef std::map < int, int > SocketToPort;
-  typedef std::map < int, thread_id > SocketToThread;
+		void socketAccept();
 
-  void onInitialize( ) throw ( RuntimeError )override;
+	private:
+		struct ConnectionThreadInfo
+		{
+			ConnectionThreadInfo(ThreadedSocketAcceptor* pAcceptor,
+				ThreadedSocketConnection* pConnection)
+				: m_pAcceptor(pAcceptor), m_pConnection(pConnection) {}
 
-  void onStart();
-  bool onPoll( double timeout );
-  void onStop();
+			ThreadedSocketAcceptor* m_pAcceptor;
+			ThreadedSocketConnection* m_pConnection;
+		};
 
-  void addThread( int s, thread_id t );
-  void removeThread( int s );
-  static THREAD_PROC socketAcceptorThread( void* p );
-  static THREAD_PROC socketConnectionThread( void* p );
+		bool readSettings(const SessionSettings&);
 
-  Sockets m_sockets;
-  PortToSessions m_portToSessions;
-  SocketToPort m_socketToPort;
-  SocketToThread m_threads;
-  Mutex m_mutex;
-};
-/*! @} */
+		typedef std::set < SessionID > SessionIDs;
+		typedef std::map < SessionID, std::shared_ptr<Session> > Sessions;
+
+		void initialize() throw (ConfigError);
+		bool onPoll(double timeout);
+		void onStop();
+
+		void addThread(int s, thread_id t);
+		void removeThread(int s);
+
+		static THREAD_PROC startThread(void* p);
+		static THREAD_PROC socketConnectionThread(void* p);
+
+		int m_socket;
+		int m_port;
+		Mutex m_mutex;
+
+		thread_id m_threadid{ 0 };
+		std::map < int, thread_id > m_threads;
+		Sessions m_sessions;
+		SessionIDs m_sessionIDs;
+		Application& m_application;
+		MessageStoreFactory& m_messageStoreFactory;
+		LogFactory* m_pLogFactory;
+		Log* m_pLog;
+		bool m_firstPoll{ true };
+		bool m_stop{ true };
+
+		bool m_SOCKET_NODELAY{ false };
+		int m_SOCKET_SEND_BUFFER_SIZE{ 0 };
+		int m_SOCKET_RECEIVE_BUFFER_SIZE{ 0 };
+	};
 }
 
 #endif //FIX_THREADEDSOCKETACCEPTOR_H

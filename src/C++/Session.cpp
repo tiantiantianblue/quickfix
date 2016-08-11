@@ -33,7 +33,6 @@ namespace FIX
 {
 	Session::Sessions Session::s_sessions;
 	Session::SessionIDs Session::s_sessionIDs;
-	Session::Sessions Session::s_registered;
 	Mutex Session::s_mutex;
 
 #define LOGEX( method ) try { method; } catch( std::exception& e ) \
@@ -41,7 +40,7 @@ namespace FIX
 
 	Session::Session(Application& application, MessageStoreFactory& messageStoreFactory,
 		const SessionID& sessionID, const TimeRange& sessionTime,
-		int heartBtInt, LogFactory* pLogFactory, const DataDictionary& sessionDataDictionary, 
+		int heartBtInt, LogFactory* pLogFactory, const DataDictionary& sessionDataDictionary,
 		const DataDictionary& appDataDictionary)
 		: m_application(application),
 		m_sessionID(sessionID),
@@ -69,8 +68,7 @@ namespace FIX
 		m_state.heartBtInt(heartBtInt);
 		m_state.initiate(heartBtInt != 0);
 		m_state.store(m_messageStoreFactory.create(m_sessionID));
-		if (m_pLogFactory)
-			m_state.log(m_pLogFactory->create(m_sessionID));
+		m_state.log(m_pLogFactory->create(m_sessionID));
 		addSession(*this);
 		m_application.onCreate(m_sessionID);
 		m_state.onEvent("Created session");
@@ -531,7 +529,8 @@ namespace FIX
 
 	bool Session::send(const std::string& string)
 	{
-		if (!m_pResponder) return false;
+		if (!m_pResponder) 
+			return false;
 		m_state.onOutgoing(string);
 		return m_pResponder->send(string);
 	}
@@ -1189,7 +1188,6 @@ namespace FIX
 		catch (InvalidMessage& e)
 		{
 			m_state.onEvent(e.what());
-
 			try
 			{
 				if (identifyType(msg) == MsgType_Logon)
@@ -1237,7 +1235,7 @@ namespace FIX
 			}
 
 			if (m_sessionID.isFIXT() && message.isApp())
-				DataDictionary::validate(message, &m_sessionDataDictionary, &m_appDataDictionary);
+				DataDictionary::validateMessage(message, &m_sessionDataDictionary, &m_appDataDictionary);
 			else
 				m_sessionDataDictionary.validate(message);
 
@@ -1437,37 +1435,13 @@ namespace FIX
 			const TargetCompID& targetCompID = FIELD_GET_REF(header, TargetCompID);
 
 			if (reverse)
-			{
-				return lookupSession(SessionID(beginString, SenderCompID(targetCompID),
-					TargetCompID(senderCompID)));
-			}
-
-			return lookupSession(SessionID(beginString, senderCompID,
-				targetCompID));
+				return lookupSession(SessionID(beginString, SenderCompID(targetCompID), TargetCompID(senderCompID)));
+			return lookupSession(SessionID(beginString, senderCompID, targetCompID));
 		}
-		catch (FieldNotFound&) { return 0; }
-	}
-
-	bool Session::isSessionRegistered(const SessionID& sessionID)
-	{
-		Locker locker(s_mutex);
-		return s_registered.end() != s_registered.find(sessionID);
-	}
-
-	std::shared_ptr<Session> Session::registerSession(const SessionID& sessionID)
-	{
-		Locker locker(s_mutex);
-		std::shared_ptr<Session> pSession = lookupSession(sessionID);
-		if (pSession == 0) return 0;
-		if (isSessionRegistered(sessionID)) return 0;
-		s_registered[sessionID] = pSession;
-		return pSession;
-	}
-
-	void Session::unregisterSession(const SessionID& sessionID)
-	{
-		Locker locker(s_mutex);
-		s_registered.erase(sessionID);
+		catch (FieldNotFound&)
+		{
+			return nullptr;
+		}
 	}
 
 	size_t Session::numSessions()
@@ -1495,6 +1469,5 @@ namespace FIX
 		Locker locker(s_mutex);
 		s_sessions.erase(s.m_sessionID);
 		s_sessionIDs.erase(s.m_sessionID);
-		s_registered.erase(s.m_sessionID);
 	}
 }

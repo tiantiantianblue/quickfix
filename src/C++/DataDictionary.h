@@ -283,8 +283,7 @@ public:
 
   bool isDataField( int field ) const
   {
-    MsgFields::const_iterator iter = m_dataFields.find( field );
-    return iter != m_dataFields.end();
+    return m_dataFields.find(field) != m_dataFields.end();
   }
 
   bool isMultipleValueField( int field ) const
@@ -297,14 +296,14 @@ public:
   }
 
   /// Validate a message.
-  static void validate( const Message& message,
+  static void validateMessage( const Message& message,
                         const DataDictionary* const pSessionDD,
                         const DataDictionary* const pAppID ) throw( FIX::Exception );
 
   void validate( const Message& message ) const throw ( FIX::Exception )
   { validate( message, false ); }
   void validate( const Message& message, bool bodyOnly ) const throw( FIX::Exception )
-  { validate( message, bodyOnly ? (DataDictionary*)0 : this, this ); }
+  { validateMessage( message, bodyOnly ? (DataDictionary*)0 : this, this ); }
 
   DataDictionary& operator=( const DataDictionary& rhs );
 

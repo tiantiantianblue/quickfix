@@ -380,7 +380,6 @@ namespace FIX
 	bool Message::setStringHeader(const std::string& string)
 	{
 		clear();
-
 		std::string::size_type pos = 0;
 		int count = 0;
 
@@ -392,7 +391,8 @@ namespace FIX
 
 			if (isHeaderField(field))
 				m_header.setField(field, false);
-			else break;
+			else 
+				break;
 		}
 		return true;
 	}
@@ -439,8 +439,10 @@ namespace FIX
 	bool Message::isHeaderField(const FieldBase& field,
 		const DataDictionary* pD)
 	{
-		if (isHeaderField(field.getField())) return true;
-		if (pD) return pD->isHeaderField(field.getField());
+		if (isHeaderField(field.getField())) 
+			return true;
+		if (pD) 
+			return pD->isHeaderField(field.getField());
 		return false;
 	}
 
@@ -529,8 +531,7 @@ namespace FIX
 	}
 
 	FIX::FieldBase Message::extractField(const std::string& string, std::string::size_type& pos,
-		const DataDictionary* pSessionDD /*= 0*/, const DataDictionary* pAppDD /*= 0*/,
-		const Group* pGroup /*= 0*/)
+		const DataDictionary* pSessionDD , const DataDictionary* pAppDD,const Group* pGroup)
 	{
 		std::string::const_iterator const tagStart = string.begin() + pos;
 		std::string::const_iterator const strEnd = string.end();
@@ -553,7 +554,8 @@ namespace FIX
 			// Assume length field is 1 less.
 			int lenField = field - 1;
 			// Special case for Signature which violates above assumption.
-			if (field == FIELD::Signature) lenField = FIELD::SignatureLength;
+			if (field == FIELD::Signature) 
+				lenField = FIELD::SignatureLength;
 
 			if (pGroup && pGroup->isSetField(lenField))
 			{
@@ -569,12 +571,6 @@ namespace FIX
 
 		std::string::const_iterator const tagEnd = soh + 1;
 		pos = std::distance(string.begin(), tagEnd);
-
-		return FieldBase(
-			field,
-			valueStart,
-			soh,
-			tagStart,
-			tagEnd);
+		return FieldBase(field,valueStart,soh,tagStart,tagEnd);
 	}
 }
