@@ -68,7 +68,7 @@ namespace FIX
 		if (m_sessions.empty())
 			throw ConfigError("No sessions defined for acceptor");
 
-		auto settings = SessionSettings::instance().get();
+		auto& settings = SessionSettings::instance().get();
 
 		m_port = settings.getInt(SOCKET_ACCEPT_PORT);
 		if (settings.has(SOCKET_NODELAY))

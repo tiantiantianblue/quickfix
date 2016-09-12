@@ -273,10 +273,9 @@ namespace FIX
 
 		static bool isAdminMsgType(const MsgType& msgType)
 		{
-			if (msgType.getValue().length() != 1) return false;
-			return strchr
-			("0A12345",
-				msgType.getValue().c_str()[0]) != 0;
+			if (msgType.getValue().length() != 1)
+				return false;
+			return strchr("0A12345",msgType.getValue().c_str()[0]) != 0;
 		}
 
 		static ApplVerID toApplVerID(const BeginString& value)

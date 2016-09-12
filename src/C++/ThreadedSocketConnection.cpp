@@ -71,7 +71,6 @@ namespace FIX
 			if (sent < 0) return false;
 			totalSent += sent;
 		}
-
 		return true;
 	}
 

@@ -59,9 +59,10 @@ namespace FIX
 		if (endDay >= 0 && startDay < 0)
 			throw ConfigError("EndDay used without StartDay");
 
-		HeartBtInt heartBtInt(settings.getInt(HEARTBTINT));
+		HeartBtInt heartBtInt(0);
 		if (connectionType == "initiator")
 		{
+			heartBtInt = HeartBtInt(settings.getInt(HEARTBTINT));
 			if (heartBtInt <= 0)
 				throw ConfigError("Heartbeat must be greater than zero");
 		}

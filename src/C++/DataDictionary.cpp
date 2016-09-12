@@ -144,7 +144,7 @@ namespace FIX
 			pSessionDD->iterate(message.getTrailer(), msgType);
 		}
 
-		if (pAppDD != 0)
+		if (pAppDD)
 		{
 			pAppDD->iterate(message, msgType);
 		}

@@ -261,7 +261,7 @@ namespace FIX
 		return stream.str();
 	}
 
-	void Message::setString(const std::string& string,
+	void Message::setString(const std::string& str,
 		bool doValidation,
 		const DataDictionary* pSessionDataDictionary,
 		const DataDictionary* pApplicationDataDictionary)
@@ -269,9 +269,7 @@ namespace FIX
 	{
 		clear();
 
-		std::string::size_type pos = 0;
-		int count = 0;
-		std::string msg;
+
 
 		static int const headerOrder[] =
 		{
@@ -281,18 +279,20 @@ namespace FIX
 		};
 
 		field_type type = header;
-
-		while (pos < string.size())
+		std::string::size_type pos = 0;
+		int count = 0;
+		std::string msg;
+		while (pos < str.size())
 		{
-			FieldBase field = extractField(string, pos, pSessionDataDictionary, pApplicationDataDictionary);
-			if (count < 3 && headerOrder[count++] != field.getField())
-				if (doValidation) throw InvalidMessage("Header fields out of order");
+			FieldBase field = extractField(str, pos, pSessionDataDictionary, pApplicationDataDictionary);
+			if (doValidation && count < 3 && headerOrder[count++] != field.getField())
+				throw InvalidMessage("Header fields out of order");
 
 			if (isHeaderField(field, pSessionDataDictionary))
 			{
 				if (type != header)
 				{
-					if (m_field == 0) 
+					if (m_field == 0)
 						m_field = field.getField();
 					m_validStructure = false;
 				}
@@ -303,7 +303,7 @@ namespace FIX
 				m_header.setField(field, false);
 
 				if (pSessionDataDictionary)
-					setGroup("_header_", field, string, pos, getHeader(), *pSessionDataDictionary);
+					setGroup("_header_", field, str, pos, getHeader(), *pSessionDataDictionary);
 			}
 			else if (isTrailerField(field, pSessionDataDictionary))
 			{
@@ -311,7 +311,7 @@ namespace FIX
 				m_trailer.setField(field, false);
 
 				if (pSessionDataDictionary)
-					setGroup("_trailer_", field, string, pos, getTrailer(), *pSessionDataDictionary);
+					setGroup("_trailer_", field, str, pos, getTrailer(), *pSessionDataDictionary);
 			}
 			else
 			{
@@ -325,7 +325,7 @@ namespace FIX
 				setField(field, false);
 
 				if (pApplicationDataDictionary)
-					setGroup(msg, field, string, pos, *this, *pApplicationDataDictionary);
+					setGroup(msg, field, str, pos, *this, *pApplicationDataDictionary);
 			}
 		}
 
@@ -371,27 +371,28 @@ namespace FIX
 				return;
 			}
 
-			if (!pGroup.get()) return;
+			if (!pGroup.get())
+				return;
 			pGroup->setField(field, false);
 			setGroup(msg, field, string, pos, *pGroup, *pDD);
 		}
 	}
 
-	bool Message::setStringHeader(const std::string& string)
+	bool Message::setStringHeader(const std::string& str)
 	{
 		clear();
 		std::string::size_type pos = 0;
 		int count = 0;
 
-		while (pos < string.size())
+		while (pos < str.size())
 		{
-			FieldBase field = extractField(string, pos);
+			FieldBase field = extractField(str, pos);
 			if (count < 3 && headerOrder[count++] != field.getField())
 				return false;
 
 			if (isHeaderField(field))
 				m_header.setField(field, false);
-			else 
+			else
 				break;
 		}
 		return true;
@@ -439,9 +440,9 @@ namespace FIX
 	bool Message::isHeaderField(const FieldBase& field,
 		const DataDictionary* pD)
 	{
-		if (isHeaderField(field.getField())) 
+		if (isHeaderField(field.getField()))
 			return true;
-		if (pD) 
+		if (pD)
 			return pD->isHeaderField(field.getField());
 		return false;
 	}
@@ -531,7 +532,7 @@ namespace FIX
 	}
 
 	FIX::FieldBase Message::extractField(const std::string& string, std::string::size_type& pos,
-		const DataDictionary* pSessionDD , const DataDictionary* pAppDD,const Group* pGroup)
+		const DataDictionary* pSessionDD, const DataDictionary* pAppDD, const Group* pGroup)
 	{
 		std::string::const_iterator const tagStart = string.begin() + pos;
 		std::string::const_iterator const strEnd = string.end();
@@ -554,7 +555,7 @@ namespace FIX
 			// Assume length field is 1 less.
 			int lenField = field - 1;
 			// Special case for Signature which violates above assumption.
-			if (field == FIELD::Signature) 
+			if (field == FIELD::Signature)
 				lenField = FIELD::SignatureLength;
 
 			if (pGroup && pGroup->isSetField(lenField))
@@ -571,6 +572,6 @@ namespace FIX
 
 		std::string::const_iterator const tagEnd = soh + 1;
 		pos = std::distance(string.begin(), tagEnd);
-		return FieldBase(field,valueStart,soh,tagStart,tagEnd);
+		return FieldBase(field, valueStart, soh, tagStart, tagEnd);
 	}
 }

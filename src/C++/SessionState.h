@@ -78,7 +78,9 @@ public:
   void testRequest( int value ) { m_testRequest = value; }
 
   bool resendRequested() const
-  { return !(m_resendRange.first == 0 && m_resendRange.second == 0); }
+  { 
+	  return !(m_resendRange.first == 0 && m_resendRange.second == 0); 
+  }
 
   typedef std::pair<int, int> ResendRange;
 
@@ -194,15 +196,15 @@ public:
   { Locker l( m_mutex ); m_pStore->refresh(); }
 
   void clear()
-  { if ( !m_pLog ) return ; Locker l( m_mutex ); m_pLog->clear(); }
+  {  Locker l( m_mutex ); m_pLog->clear(); }
   void backup()
-  { if ( !m_pLog ) return ; Locker l( m_mutex ); m_pLog->backup(); }
+  {  Locker l( m_mutex ); m_pLog->backup(); }
   void onIncoming( const std::string& string )
-  { if ( !m_pLog ) return ; Locker l( m_mutex ); m_pLog->onIncoming( string ); }
+  {  Locker l( m_mutex ); m_pLog->onIncoming( string ); }
   void onOutgoing( const std::string& string )
-  { if ( !m_pLog ) return ; Locker l( m_mutex ); m_pLog->onOutgoing( string ); }
+  {  Locker l( m_mutex ); m_pLog->onOutgoing( string ); }
   void onEvent( const std::string& string )
-  { if ( !m_pLog ) return ; Locker l( m_mutex ); m_pLog->onEvent( string ); }
+  {  Locker l( m_mutex ); m_pLog->onEvent( string ); }
 
 private:
   bool m_enabled;

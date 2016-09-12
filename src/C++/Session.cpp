@@ -31,9 +31,9 @@
 
 namespace FIX
 {
-	Session::Sessions Session::s_sessions;
-	Session::SessionIDs Session::s_sessionIDs;
-	Mutex Session::s_mutex;
+	static Session::Sessions s_sessions;
+	static Session::SessionIDs s_sessionIDs;
+	static Mutex s_mutex;
 
 #define LOGEX( method ) try { method; } catch( std::exception& e ) \
   { m_state.onEvent( e.what() ); }
@@ -127,7 +127,8 @@ namespace FIX
 		{
 			if (!checkSessionTime(timeStamp))
 			{
-				reset(); return;
+				reset(); 
+				return;
 			}
 
 			if (!isEnabled() || !isLogonTime(timeStamp))
@@ -159,7 +160,8 @@ namespace FIX
 				return;
 			}
 
-			if (m_state.heartBtInt() == 0) return;
+			if (m_state.heartBtInt() == 0) 
+				return;
 
 			if (m_state.logoutTimedOut())
 			{
@@ -226,7 +228,8 @@ namespace FIX
 		if (m_state.receivedReset())
 		{
 			m_state.onEvent("Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1");
-			if (!m_state.sentReset()) m_state.reset();
+			if (!m_state.sentReset()) 
+				m_state.reset();
 		}
 
 		if (m_state.shouldSendLogon() && !m_state.receivedReset())
@@ -454,7 +457,6 @@ namespace FIX
 	bool Session::sendRaw(Message& message, int num)
 	{
 		Locker l(m_mutex);
-
 		try
 		{
 			Header& header = message.getHeader();
@@ -486,12 +488,7 @@ namespace FIX
 				}
 
 				message.toString(messageString);
-
-				if (!num)
-					persist(message, messageString);
-
-				if (
-					msgType == "A" || msgType == "5"
+				if (msgType == "A" || msgType == "5"
 					|| msgType == "2" || msgType == "4"
 					|| isLoggedOn())
 				{
@@ -509,15 +506,17 @@ namespace FIX
 					m_application.toApp(message, m_sessionID);
 					message.toString(messageString);
 
-					if (!num)
-						persist(message, messageString);
-
 					if (isLoggedOn())
 						send(messageString);
 				}
-				catch (DoNotSend&) { return false; }
+				catch (DoNotSend&) 
+				{ 
+					return false; 
+				}
 			}
 
+			if (!num)
+				persist(message, messageString);
 			return true;
 		}
 		catch (IOException& e)
@@ -597,6 +596,7 @@ namespace FIX
 		m_state.incrNextSenderMsgSeqNum();
 	}
 
+	//client
 	void Session::generateLogon()
 	{
 		Message logon;
@@ -620,16 +620,16 @@ namespace FIX
 		sendRaw(logon);
 	}
 
+	//server
 	void Session::generateLogon(const Message& aLogon)
 	{
 		Message logon;
-		EncryptMethod encryptMethod;
-		HeartBtInt heartBtInt;
 		logon.setField(EncryptMethod(0));
 		if (m_sessionID.isFIXT())
 			logon.setField(DefaultApplVerID(m_senderDefaultApplVerID));
 		if (m_state.receivedReset())
 			logon.setField(ResetSeqNumFlag(true));
+		HeartBtInt heartBtInt;
 		aLogon.getField(heartBtInt);
 		logon.getHeader().setField(MsgType("A"));
 		logon.setField(heartBtInt);
@@ -1255,7 +1255,8 @@ namespace FIX
 				nextReject(message, timeStamp);
 			else
 			{
-				if (!verify(message)) return;
+				if (!verify(message)) 
+					return;
 				m_state.incrNextTargetMsgSeqNum();
 			}
 		}

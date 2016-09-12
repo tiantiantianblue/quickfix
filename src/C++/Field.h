@@ -73,6 +73,7 @@ class FieldBase
   friend class Message;
 
   /// Constructor which also calculates field metrics
+
   FieldBase( int field, 
              std::string::const_iterator valueStart, 
              std::string::const_iterator valueEnd,
@@ -84,6 +85,7 @@ class FieldBase
   {}
 
 public:
+	FieldBase():m_metrics(no_metrics()) {}
   FieldBase( int field, const std::string& string )
     : m_field( field ), m_string(string), m_metrics( no_metrics() )
   {}

@@ -45,12 +45,11 @@ namespace FIX
 	class Session
 	{
 	public:
-		Session(Application&, MessageStoreFactory&,const SessionID&,
-			const TimeRange&,int heartBtInt, LogFactory* pLogFactory,
+		Session(Application&, MessageStoreFactory&, const SessionID&,
+			const TimeRange&, int heartBtInt, LogFactory* pLogFactory,
 			const DataDictionary& sessionDataDictionary,
 			const DataDictionary& appDataDictionary
-			);
-		Session(Application & application, MessageStoreFactory & messageStoreFactory, const SessionID & sessionID, const TimeRange & sessionTime, int heartBtInt, LogFactory * pLogFactory);
+		);
 		~Session();
 
 		void logon()
@@ -295,10 +294,9 @@ namespace FIX
 		Log* getLog() { return &m_state; }
 		const MessageStore* getStore() { return &m_state; }
 
-	private:
 		typedef std::map < SessionID, std::shared_ptr<Session> > Sessions;
 		typedef std::set < SessionID > SessionIDs;
-
+	private:
 		static bool addSession(Session&);
 		static void removeSession(Session&);
 
@@ -407,10 +405,6 @@ namespace FIX
 		LogFactory* m_pLogFactory;
 		Responder* m_pResponder;
 		Mutex m_mutex;
-
-		static Sessions s_sessions;
-		static SessionIDs s_sessionIDs;
-		static Mutex s_mutex;
 
 		const DataDictionary& m_sessionDataDictionary;
 		const DataDictionary& m_appDataDictionary;
